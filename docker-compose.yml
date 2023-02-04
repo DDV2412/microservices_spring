@@ -19,52 +19,40 @@ services:
     container_name: mongodb_user_service
     image: mongo:latest
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ipmugo_admin
-      MONGO_INITDB_ROOT_PASSWORD: ipmugo_admin
     ports:
       - "27017:27017"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mongodb-user:/data/db
 
   ## MongoDB Compose Media Sevice Docker Config
   mongodb_media_service:
     container_name: mongodb_media_service
     image: mongo:latest
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ipmugo_admin
-      MONGO_INITDB_ROOT_PASSWORD: ipmugo_admin
     ports:
       - "27018:27017"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mongodb-media:/data/db
 
   ## MongoDB Compose Journal Sevice Docker Config
   mongodb_journal_service:
     container_name: mongodb_journal_service
     image: mongo:latest
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ipmugo_admin
-      MONGO_INITDB_ROOT_PASSWORD: ipmugo_admin
     ports:
       - "27019:27017"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mongodb-journal:/data/db
 
-  ## MongoDB Compose Journal Sevice Docker Config
+  ## MongoDB Compose Article Sevice Docker Config
   mongodb_article_service:
     container_name: mongodb_article_service
     image: mongo:latest
     restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ipmugo_admin
-      MONGO_INITDB_ROOT_PASSWORD: ipmugo_admin
     ports:
       - "27020:27017"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mongodb-article:/data/db
 
   keycloak:
     container_name: keycloak
