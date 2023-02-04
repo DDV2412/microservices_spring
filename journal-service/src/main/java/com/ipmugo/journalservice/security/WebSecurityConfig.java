@@ -1,0 +1,39 @@
+package com.ipmugo.journalservice.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+
+@Configuration
+@EnableGlobalMethodSecurity(
+        prePostEnabled = true)
+public class WebSecurityConfig {
+
+    @Bean
+    public JwtFilter jwtFilter() {
+        return new JwtFilter();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf().disable()
+                .authorizeRequests().antMatchers(HttpMethod.GET,"/api/category", "/api/category/**").permitAll()
+                .antMatchers(HttpMethod.GET,"/api/journal", "/api/journal/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/api/category").hasAuthority("Administrator")
+                .antMatchers(HttpMethod.DELETE, "/api/category/**").hasAuthority("Administrator")
+                .antMatchers("/api/citation-report/**").hasAuthority("Administrator")
+                .antMatchers(HttpMethod.POST, "/api/journal").hasAuthority("Administrator")
+                .antMatchers(HttpMethod.DELETE, "/api/journal/**").hasAuthority("Administrator")
+                .antMatchers(HttpMethod.POST, "/api/journal/assign-category/**").hasAuthority("Administrator")
+                .anyRequest().authenticated();
+
+        http.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}

@@ -1,0 +1,12 @@
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\dto\UserDetailsImpl.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\model\Media.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\security\WebSecurityConfig.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\controller\MediaController.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\dto\ResponseData.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\dto\MediaRequest.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\security\JwtFilter.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\repository\MediaRepository.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\service\MediaService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\utils\CustomException.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\dto\Authority.java
+F:\Project\MICROSERVICE\ipmugo-microservice\media-service\src\main\java\com\ipmugo\mediaservice\MediaServiceApplication.java
