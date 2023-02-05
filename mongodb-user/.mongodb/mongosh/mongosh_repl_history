@@ -1,8 +1,0 @@
-show dbs
-show db
-db
-use admin
-show dbs
-db
-use user_service
-show dbs

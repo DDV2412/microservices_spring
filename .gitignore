@@ -1,7 +1,4 @@
-mongodb-article
-mongodb-journal
-mongodb-media
-mongodb-user
+mongodb-data
 prometheus
 realms
 .idea
