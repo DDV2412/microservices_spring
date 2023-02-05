@@ -98,6 +98,85 @@ services:
     ports:
       - "9411:9411"
 
+  ## Eureka Server
+  discovery-server:
+    image: dhyan2412/discovery-server:latest
+    container_name: discovery-server
+    ports:
+      - "8352:8352"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+
+  ## Api gateway Server
+  api-gateway:
+    image: dhyan2412/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    expose:
+      - "80"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
+    depends_on:
+      - zipkin
+      - discovery-server
+      - keycloak
+
+
+  ## Journal Server
+  journal-service:
+    image: dhyan2412/journal-service:latest
+    container_name: journal-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - mongodb_journal_service
+      - discovery-server
+      - api-gateway
+      - broker
+      - zipkin
+
+  ## Media Server
+  media-service:
+    image: dhyan2412/media-service:latest
+    container_name: media-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      - mongodb_media_service
+      - discovery-server
+      - api-gateway
+
+  ## Article Server
+  article-service:
+    image: dhyan2412/article-service:latest
+    container_name: article-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      - broker
+      - api-gateway
+      - mongodb_article_service
+      - discovery-server
+
+
+  ## User Server
+  user-service:
+    image: dhyan2412/user-service:latest
+    container_name: user-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      - mongodb_user_service
+      - discovery-server
+      - api-gateway
+
   ## Prometheus
   prometheus:
       image: prom/prometheus:latest
@@ -107,6 +186,11 @@ services:
         - "9090:9090"
       volumes:
         - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      depends_on:
+        - journal-service
+        - article-service
+        - user-service
+        - media-service
 
   grafana:
       image: grafana/grafana-oss:latest
