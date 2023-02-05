@@ -31,6 +31,8 @@ services:
     restart: always
     ports:
       - "27018:27017"
+    expose:
+      - "27018"
     volumes:
       - ./mongodb-media:/data/db
 
@@ -41,6 +43,8 @@ services:
     restart: always
     ports:
       - "27019:27017"
+    expose:
+      - "27019"
     volumes:
       - ./mongodb-journal:/data/db
 
@@ -51,6 +55,8 @@ services:
     restart: always
     ports:
       - "27020:27017"
+    expose:
+      - "27020"
     volumes:
       - ./mongodb-article:/data/db
 
