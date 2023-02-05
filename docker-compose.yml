@@ -62,7 +62,7 @@ services:
       KEYCLOAK_ADMIN: ipmugo_admin
       KEYCLOAK_ADMIN_PASSWORD: ipmugo_admin
     ports:
-      - "8181:8080"
+      - "8080:8080"
     volumes:
       - ./realms/:/opt/keycloak/data/import/
 

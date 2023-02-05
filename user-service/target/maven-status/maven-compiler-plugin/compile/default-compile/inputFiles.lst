@@ -9,6 +9,7 @@ F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmug
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\security\WebSecurityConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\PasswordEncode.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\service\OneTimePasswordService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\DataSeeders.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\repository\RoleRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\CustomException.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\model\OneTimePassword.java
