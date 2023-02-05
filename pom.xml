@@ -23,7 +23,7 @@
         <module>discovery-server</module>
         <module>user-service</module>
         <module>search-service</module>
-        <module>search-service</module>
+
     </modules>
 
     <properties>
