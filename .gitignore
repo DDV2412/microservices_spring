@@ -7,3 +7,4 @@ realms
 .idea
 grafana
 postgres
+postgres_keycloak
