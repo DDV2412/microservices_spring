@@ -1,5 +1,9 @@
-mongodb-data
+mongodb-article-data
+mongodb-journal-data
+mongodb-media-data
+mongodb-user-data
 prometheus
 realms
 .idea
 grafana
+postgres

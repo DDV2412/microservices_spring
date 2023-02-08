@@ -14,14 +14,49 @@ services:
       - "5432:5432"
     restart: always
 
-  mongodb:
-    container_name: mongodb
+  mongodb_user:
+    container_name: mongodb_user
     image: mongo:latest
     restart: always
     ports:
       - "27017:27017"
+    expose:
+      - "27017"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mongodb-user-data:/data/db
+
+  mongodb_media:
+    container_name: mongodb_media
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27018:27018"
+    expose:
+      - "27018"
+    volumes:
+      - ./mongodb-media-data:/data/db
+
+  mongodb_journal:
+    container_name: mongodb_journal
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27019:27019"
+    expose:
+      - "27019"
+    volumes:
+      - ./mongodb-journal-data:/data/db
+
+  mongodb_article:
+    container_name: mongodb_article
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27020:27020"
+    expose:
+      - "27020"
+    volumes:
+      - ./mongodb-article-data:/data/db
 
   keycloak:
     container_name: keycloak
@@ -116,7 +151,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - mongodb
+      - mongodb_journal
       - discovery-server
       - api-gateway
       - broker
@@ -131,7 +166,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - zipkin
-      - mongodb
+      - mongodb_media
       - discovery-server
       - api-gateway
 
@@ -146,7 +181,7 @@ services:
       - zipkin
       - broker
       - api-gateway
-      - mongodb
+      - mongodb_article
       - discovery-server
 
 
@@ -159,7 +194,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - zipkin
-      - mongodb
+      - mongodb_user
       - discovery-server
       - api-gateway
 
