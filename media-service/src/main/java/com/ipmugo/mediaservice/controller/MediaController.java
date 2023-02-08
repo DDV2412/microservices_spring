@@ -66,7 +66,7 @@ public class MediaController {
             mediaRequest.setFileSize(file.getSize());
             mediaRequest.setFileByte(file.getBytes());
             mediaRequest.setFileType(file.getContentType());
-            mediaRequest.setFilePath(imageZone + "/api/media/"+file.getOriginalFilename());
+            mediaRequest.setFilePath(imageZone + "/file/"+file.getOriginalFilename());
 
             responseData.setStatus(true);
             responseData.setData(mediaService.uploadFile(mediaRequest));
@@ -116,7 +116,7 @@ public class MediaController {
                 mediaRequest.setFileSize(file.getSize());
                 mediaRequest.setFileByte(file.getBytes());
                 mediaRequest.setFileType(file.getContentType());
-                mediaRequest.setFilePath("/api/media/"+file.getOriginalFilename());
+                mediaRequest.setFilePath(imageZone + "/file/"+file.getOriginalFilename());
                 mediaRequests.add(mediaRequest);
             }
 

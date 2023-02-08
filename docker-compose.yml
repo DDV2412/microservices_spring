@@ -34,6 +34,7 @@ services:
       - "8080:8080"
     volumes:
       - ./realms/:/opt/keycloak/data/import/
+    restart: always
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -43,10 +44,12 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    restart: always
 
   broker:
     image: confluentinc/cp-kafka:latest
     container_name: broker
+    restart: always
     ports:
       - "9092:9092"
     depends_on:
@@ -64,6 +67,7 @@ services:
   zipkin:
     image: openzipkin/zipkin:latest
     container_name: zipkin
+    restart: always
     ports:
       - "9411:9411"
 
@@ -71,6 +75,7 @@ services:
   discovery-server:
     image: dhyan2412/discovery-server:latest
     container_name: discovery-server
+    restart: always
     ports:
       - "8352:8352"
     environment:
@@ -82,6 +87,7 @@ services:
   api-gateway:
     image: dhyan2412/api-gateway:latest
     container_name: api-gateway
+    restart: always
     ports:
       - "80:80"
     expose:
@@ -99,6 +105,7 @@ services:
   journal-service:
     image: dhyan2412/journal-service:latest
     container_name: journal-service
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -112,6 +119,7 @@ services:
   media-service:
     image: dhyan2412/media-service:latest
     container_name: media-service
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -124,6 +132,7 @@ services:
   article-service:
     image: dhyan2412/article-service:latest
     container_name: article-service
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -138,6 +147,7 @@ services:
   user-service:
     image: dhyan2412/user-service:latest
     container_name: user-service
+    restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
