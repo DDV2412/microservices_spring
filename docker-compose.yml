@@ -5,50 +5,54 @@ services:
     image: postgres:latest
     environment:
       POSTGRES_ROOT: root
-      POSTGRES_DB: postgres_keycloak
+      POSTGRES_DB: postgres-keycloak
       POSTGRES_USER: ipmugo_admin
       POSTGRES_PASSWORD: ipmugo_admin
     volumes:
-      - ./postgres_keycloak:/data/postgres
+      - ./postgres-keycloak:/data/postgres
+    expose:
+      - "5431"
     ports:
-      - "5432:5432"
+        - "5431:5431"
+    command: -p 5431
     restart: always
 
-  mongodb-user:
-    container_name: mongodb-user
+  userDb:
+    container_name: userDb
     image: mongo:latest
     restart: always
     ports:
-      - "27017:27017"
+      - '27018:27017'
     volumes:
-      - ./mongodb_user_data:/data/db
+      - ./userDb:/data/db
 
-  mongodb-media:
-      container_name: mongodb-media
-      image: mongo:latest
-      restart: always
-      ports:
-        - "27018:27017"
-      volumes:
-        - ./mongodb_media_data:/data/db
 
-  mongodb-journal:
-      container_name: mongodb-journal
-      image: mongo:latest
-      restart: always
-      ports:
-        - "27019:27017"
-      volumes:
-        - ./mongodb_journal_data:/data/db
+  mediaDb:
+    container_name: mediaDb
+    image: mongo:latest
+    restart: always
+    ports:
+      - '27019:27017'
+    volumes:
+      - ./mediaDb:/data/db
 
-  mongodb-article:
-      container_name: mongodb-article
-      image: mongo:latest
-      restart: always
-      ports:
-        - "27020:27017"
-      volumes:
-        - ./mongodb_article_data:/data/db
+  journalDb:
+    container_name: journalDb
+    image: mongo:latest
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./journalDb:/data/db
+
+  articleDb:
+    container_name: articleDb
+    image: mongo:latest
+    restart: always
+    ports:
+      - '27020:27017'
+    volumes:
+      - ./articleDb:/data/db
 
   keycloak:
     container_name: keycloak
@@ -134,7 +138,6 @@ services:
       - discovery-server
       - keycloak
 
-
   ## Journal Server
   journal-service:
     image: dhyan2412/journal-service:latest
@@ -143,7 +146,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - mongodb-journal
+      - journalDb
       - discovery-server
       - api-gateway
       - broker
@@ -151,44 +154,44 @@ services:
 
   ## Media Server
   media-service:
-    image: dhyan2412/media-service:latest
-    container_name: media-service
-    restart: always
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - zipkin
-      - mongodb-media
-      - discovery-server
-      - api-gateway
+      image: dhyan2412/media-service:latest
+      container_name: media-service
+      restart: always
+      environment:
+        - SPRING_PROFILES_ACTIVE=docker
+      depends_on:
+        - zipkin
+        - mediaDb
+        - discovery-server
+        - api-gateway
 
   ## Article Server
   article-service:
-    image: dhyan2412/article-service:latest
-    container_name: article-service
-    restart: always
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - zipkin
-      - broker
-      - api-gateway
-      - mongodb-article
-      - discovery-server
+      image: dhyan2412/article-service:latest
+      container_name: article-service
+      restart: always
+      environment:
+        - SPRING_PROFILES_ACTIVE=docker
+      depends_on:
+        - zipkin
+        - broker
+        - api-gateway
+        - articleDb
+        - discovery-server
 
 
   ## User Server
   user-service:
-    image: dhyan2412/user-service:latest
-    container_name: user-service
-    restart: always
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - zipkin
-      - mongodb-user
-      - discovery-server
-      - api-gateway
+      image: dhyan2412/user-service:latest
+      container_name: user-service
+      restart: always
+      environment:
+        - SPRING_PROFILES_ACTIVE=docker
+      depends_on:
+        - zipkin
+        - userDb
+        - discovery-server
+        - api-gateway
 
   ## Prometheus
   prometheus:
@@ -204,6 +207,7 @@ services:
         - article-service
         - user-service
         - media-service
+
 
   grafana:
       image: grafana/grafana-oss:latest
