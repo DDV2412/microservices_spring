@@ -1,15 +1,15 @@
 version: '3.7'
 services:
-  postgres:
-    container_name: postgres
+  postgres_keycloak:
+    container_name: postgres_keycloak
     image: postgres:latest
     environment:
-      POSTGRES_DB: public_archives
+      POSTGRES_ROOT: root
+      POSTGRES_DB: postgres_keycloak
       POSTGRES_USER: ipmugo_admin
       POSTGRES_PASSWORD: ipmugo_admin
-      PGDATA: /data/postgres
     volumes:
-      - ./postgres:/data/postgres
+      - ./postgres_keycloak:/data/postgres
     ports:
       - "5432:5432"
     restart: always
@@ -28,6 +28,11 @@ services:
     image: quay.io/keycloak/keycloak:latest
     command: [ "start-dev", "--import-realm" ]
     environment:
+      DB_VENDOR: postgresql
+      DB_ADDR: postgres
+      DB_DATABASE: postgres_keycloak
+      DB_USER: ipmugo_admin
+      DB_PASSWORD: ipmugo_admin
       KEYCLOAK_ADMIN: ipmugo_admin
       KEYCLOAK_ADMIN_PASSWORD: ipmugo_admin
     ports:
@@ -35,6 +40,8 @@ services:
     volumes:
       - ./realms/:/opt/keycloak/data/import/
     restart: always
+    depends_on:
+      - postgres_keycloak
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
