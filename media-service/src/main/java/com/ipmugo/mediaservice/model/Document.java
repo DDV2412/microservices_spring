@@ -1,27 +1,23 @@
 package com.ipmugo.mediaservice.model;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-@Document(value = "media")
+import java.time.LocalDateTime;
+
+@org.springframework.data.mongodb.core.mapping.Document(value = "document")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
-public class Media {
-
-    @Id
-    private String id;
+public class Document {  @Id
+private String id;
 
     @Field
     private String fileName;
@@ -32,8 +28,6 @@ public class Media {
     @Field
     private String fileType;
 
-    @Field
-    private String filePath;
 
     @Field
     private byte[] fileByte;
@@ -43,5 +37,4 @@ public class Media {
 
     @LastModifiedDate
     private LocalDateTime createdAt;
-
 }

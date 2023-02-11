@@ -22,7 +22,7 @@ public class AuthorService {
 
 
     /**
-     * Save Author
+     * Save AuthorEvent
      * */
     public Author addAuthor(Author author) throws CustomException {
         try{
@@ -33,7 +33,7 @@ public class AuthorService {
     }
 
     /**
-     * Author by FirstName and LastName
+     * AuthorEvent by FirstName and LastName
      * */
     public Author getAuthor(String firstName, String lastName) throws CustomException {
         try{
@@ -45,7 +45,7 @@ public class AuthorService {
         }
     }
     /**
-     * Update Data Author
+     * Update Data AuthorEvent
      * */
     public Author updateAuthor(String firstName, String lastName, Author author) throws CustomException {
         try{
@@ -67,7 +67,7 @@ public class AuthorService {
     }
 
     /**
-     * Delete Author
+     * Delete AuthorEvent
      * */
     public void deleteAuthor(String id) throws CustomException {
         try{

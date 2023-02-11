@@ -71,8 +71,5 @@ public class JournalRequest {
 
     private String reviewPolice;
 
-    @NotEmpty(message = "Categories List must not be empty")
-    private Set<Category> categoriesList;
-
     private JournalCitation journalCitationReport;
 }

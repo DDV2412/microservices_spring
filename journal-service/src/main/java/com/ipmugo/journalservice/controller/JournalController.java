@@ -27,10 +27,10 @@ public class JournalController {
     private JournalService journalService;
 
     /**
-     * Save or Update Journal
+     * Create Journal
      * */
     @PostMapping
-    public ResponseEntity<ResponseData<Journal>> createOrUpdateJournal(@Valid @RequestBody JournalRequest journalRequest,
+    public ResponseEntity<ResponseData<Journal>> createJournal(@Valid @RequestBody JournalRequest journalRequest,
                                                               Errors errors) {
         ResponseData<Journal> responseData = new ResponseData<>();
 
@@ -45,7 +45,38 @@ public class JournalController {
         }
 
         try{
-            responseData.setData(journalService.createOrUpdateJournal(journalRequest));
+            responseData.setData(journalService.createJournal(journalRequest));
+            responseData.setStatus(true);
+            return ResponseEntity.ok(responseData);
+
+        }catch (CustomException e){
+            responseData.getMessages().add(e.getMessage());
+            responseData.setData(null);
+            responseData.setStatus(false);
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    /**
+     * Update Journal
+     * */
+    @PostMapping
+    public ResponseEntity<ResponseData<Journal>> updateJournal(@PathVariable("id") String id, @Valid @RequestBody JournalRequest journalRequest,
+                                                                       Errors errors) {
+        ResponseData<Journal> responseData = new ResponseData<>();
+
+        if (errors.hasErrors()) {
+            for (ObjectError error : errors.getAllErrors()){
+                responseData.getMessages().add(error.getDefaultMessage());
+            }
+
+            responseData.setStatus(false);
+
+            return ResponseEntity.badRequest().body(responseData);
+        }
+
+        try{
+            responseData.setData(journalService.updateJournal(id, journalRequest));
             responseData.setStatus(true);
             return ResponseEntity.ok(responseData);
 

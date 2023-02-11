@@ -22,12 +22,12 @@ public class CategoryService {
     /**
      * Get Category by Name
      * */
-    public Category getCategory(String name) throws CustomException{
+    public Category getCategory(String id) throws CustomException{
         try{
-            Optional<Category> category = categoryRepository.findByName(name);
+            Optional<Category> category = categoryRepository.findById(id);
 
             if (category.isEmpty()){
-                throw new CustomException("Category with name "+ name + "not found", HttpStatus.NOT_FOUND);
+                throw new CustomException("Category with id "+ id + "not found", HttpStatus.NOT_FOUND);
             }
 
 
@@ -38,29 +38,41 @@ public class CategoryService {
     }
 
     /**
-     * Save or Update Category
+     * Create Category
      * */
-    public Category saveOrUpdate(Category category) throws CustomException {
+    public Category createCategory(Category category) throws CustomException {
         try{
             Optional<Category> category1 = categoryRepository.findByName(category.getName());
 
-            if (category1.isEmpty()){
-                Category category2 = Category.builder()
-                        .name(category.getName())
-                        .illustration(category.getIllustration())
-                        .build();
-                return categoryRepository.save(category2);
+            if (category1.isPresent()){
+                throw new CustomException("Category with name "+ category.getName() + "is ready", HttpStatus.FOUND);
             }
 
-            category1.get().setName(category.getName());
-            category1.get().setIllustration(category.getIllustration());
-
-            return categoryRepository.save(category1.get());
+            Category category2 = Category.builder()
+                    .name(category.getName())
+                    .illustration(category.getIllustration())
+                    .build();
+            return categoryRepository.save(category2);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
 
+    /**
+     * Update Category
+     * */
+    public Category updateCategory(String id, Category category) throws CustomException {
+        try{
+            Category category1 = this.getCategory(id);
+
+            category1.setName(category.getName());
+            category1.setIllustration(category.getIllustration());
+
+            return categoryRepository.save(category1);
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
     /**
      * Get Category by Name
      * */
@@ -75,9 +87,9 @@ public class CategoryService {
     /**
      * Delete Category by Name
      * */
-    public void deleteCategory(String name) throws CustomException{
+    public void deleteCategory(String id) throws CustomException{
         try{
-            Category category = this.getCategory(name);
+            Category category = this.getCategory(id);
 
             categoryRepository.deleteById(category.getId());
 

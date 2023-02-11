@@ -30,41 +30,14 @@ public class JournalService {
     private KafkaTemplate<String, JournalEvent> kafkaTemplate;
 
     /**
-     * Save or Update Journal
+     * Create Journal
      * */
-    public Journal createOrUpdateJournal(JournalRequest journalRequest) throws CustomException {
+    public Journal createJournal(JournalRequest journalRequest) throws CustomException {
         try{
             Optional<Journal> isExist = journalRepository.findByIssn(journalRequest.getIssn());
 
             if(isExist.isPresent()){
-                Journal journal = isExist.get();
-                journal.setName(journalRequest.getName());
-                        journal.setIssn(journalRequest.getIssn());
-                        journal.setE_issn(journalRequest.getE_issn());
-                        journal.setAbbreviation(journalRequest.getAbbreviation());
-                        journal.setThumbnail(journalRequest.getThumbnail());
-                        journal.setDescription(journalRequest.getDescription());
-                        journal.setPublisher(journalRequest.getPublisher());
-                        journal.setJournalSite(journalRequest.getJournalSite());
-                        journal.setCountry(journalRequest.getCountry());
-                        journal.setFocusScope(journalRequest.getFocusScope());
-                        journal.setAuthorGuidelines(journalRequest.getAuthorGuidelines());
-                        journal.setPrivacyStatement(journalRequest.getPrivacyStatement());
-                        journal.setAuthorFees(journalRequest.getAuthorFees());
-                        journal.setReviewPolice(journalRequest.getReviewPolice());
-                        journal.setLicense(journalRequest.getLicense());
-
-                kafkaTemplate.send("journal", JournalEvent.builder()
-                        .id(journal.getId())
-                        .name(journal.getName())
-                        .issn(journal.getIssn())
-                        .e_issn(journal.getE_issn())
-                        .publisher(journal.getPublisher())
-                        .abbreviation(journal.getAbbreviation())
-                        .journalSite(journal.getJournalSite())
-                        .build());
-                return journalRepository.save(journal);
-
+                throw new CustomException("Journal with issn" + journalRequest.getIssn() +" is ready", HttpStatus.FOUND);
             }
 
             Journal journal = Journal.builder()
@@ -110,6 +83,46 @@ public class JournalService {
         try{
             return journalRepository.findAll();
         }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Update Journal
+     * */
+    public Journal updateJournal(String id, JournalRequest journalRequest) throws CustomException {
+        try{
+            Journal journal = this.getJournal(id);
+
+            journal.setName(journalRequest.getName());
+            journal.setIssn(journalRequest.getIssn());
+            journal.setE_issn(journalRequest.getE_issn());
+            journal.setAbbreviation(journalRequest.getAbbreviation());
+            journal.setThumbnail(journalRequest.getThumbnail());
+            journal.setDescription(journalRequest.getDescription());
+            journal.setPublisher(journalRequest.getPublisher());
+            journal.setJournalSite(journalRequest.getJournalSite());
+            journal.setCountry(journalRequest.getCountry());
+            journal.setFocusScope(journalRequest.getFocusScope());
+            journal.setAuthorGuidelines(journalRequest.getAuthorGuidelines());
+            journal.setPrivacyStatement(journalRequest.getPrivacyStatement());
+            journal.setAuthorFees(journalRequest.getAuthorFees());
+            journal.setReviewPolice(journalRequest.getReviewPolice());
+            journal.setLicense(journalRequest.getLicense());
+
+
+            kafkaTemplate.send("journal", JournalEvent.builder()
+                    .id(journal.getId())
+                    .name(journal.getName())
+                    .issn(journal.getIssn())
+                    .e_issn(journal.getE_issn())
+                    .publisher(journal.getPublisher())
+                    .abbreviation(journal.getAbbreviation())
+                    .journalSite(journal.getJournalSite())
+                    .build());
+            return journalRepository.save(journal);
+
+        }catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }

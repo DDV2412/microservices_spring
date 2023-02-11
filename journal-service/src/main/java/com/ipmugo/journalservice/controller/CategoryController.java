@@ -23,10 +23,10 @@ public class CategoryController {
     private CategoryService categoryService;
 
     /**
-     * Save or Update Category
+     * Create Category
      * */
     @PostMapping
-    public ResponseEntity<ResponseData<Category>> createOrUpdateCategory(@Valid @RequestBody Category category,
+    public ResponseEntity<ResponseData<Category>> createCategory(@Valid @RequestBody Category category,
                                                                        Errors errors) {
         ResponseData<Category> responseData = new ResponseData<>();
 
@@ -41,7 +41,38 @@ public class CategoryController {
         }
 
         try{
-            responseData.setData(categoryService.saveOrUpdate(category));
+            responseData.setData(categoryService.createCategory(category));
+            responseData.setStatus(true);
+            return ResponseEntity.ok(responseData);
+
+        }catch (CustomException e){
+            responseData.getMessages().add(e.getMessage());
+            responseData.setData(null);
+            responseData.setStatus(false);
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    /**
+     * Update Category
+     * */
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponseData<Category>> updateCategory(@PathVariable("id") String id, @Valid @RequestBody Category category,
+                                                                 Errors errors) {
+        ResponseData<Category> responseData = new ResponseData<>();
+
+        if (errors.hasErrors()) {
+            for (ObjectError error : errors.getAllErrors()){
+                responseData.getMessages().add(error.getDefaultMessage());
+            }
+
+            responseData.setStatus(false);
+
+            return ResponseEntity.badRequest().body(responseData);
+        }
+
+        try{
+            responseData.setData(categoryService.updateCategory(id, category));
             responseData.setStatus(true);
             return ResponseEntity.ok(responseData);
 
@@ -76,12 +107,12 @@ public class CategoryController {
     /**
      * Get Category By Name
      * */
-    @GetMapping("/{name}")
-    public ResponseEntity<ResponseData<Category>> getCategory(@PathVariable("name") String name) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseData<Category>> getCategory(@PathVariable("id") String id) {
         ResponseData<Category> responseData = new ResponseData<>();
         try{
             responseData.setStatus(true);
-            responseData.setData(categoryService.getCategory(name));
+            responseData.setData(categoryService.getCategory(id));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){

@@ -198,14 +198,14 @@ public class ArticleController {
         }
     }
 
-    @GetMapping("/oai-pmh/dc/{id}")
+    @GetMapping("/oai-pmh/dc/{id}/{start}/{until}")
     @CircuitBreaker(name = "journal")
     @TimeLimiter(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("id") String id){
+    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("id") String id, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
-            articleService.getOaiPmh(id, "oai_dc");
+            articleService.getOaiPmh(id, "oai_dc", start, until);
 
             responseData.setStatus(true);
             responseData.getMessages().add( "Harvested journal with id " + id + " successfully");
@@ -217,14 +217,14 @@ public class ArticleController {
         }
     }
 
-    @GetMapping("/oai-pmh/marc/{id}")
+    @GetMapping("/oai-pmh/marc/{id}/{start}/{until}")
     @CircuitBreaker(name = "journal")
     @TimeLimiter(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("id") String id){
+    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("id") String id, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
-            articleService.getOaiPmh(id, "oai_marc");
+            articleService.getOaiPmh(id, "oai_marc", start, until);
 
             responseData.setStatus(true);
             responseData.getMessages().add( "Harvested journal with id " + id + " successfully");

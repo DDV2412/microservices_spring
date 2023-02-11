@@ -23,7 +23,7 @@ public class AuthorController {
     private AuthorService authorService;
 
     /**
-     * Update Author
+     * Update AuthorEvent
      * */
     @PutMapping("/{firstName}/{lastName}")
     public ResponseEntity<ResponseData<Author>> updateAuthor(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName, @Valid @RequestBody Author author,
@@ -45,7 +45,7 @@ public class AuthorController {
             Author author1 = authorService.updateAuthor(firstName, lastName, author);
 
             if(author1 == null){
-                responseData.getMessages().add("Author with firstname "+firstName+" not found");
+                responseData.getMessages().add("AuthorEvent with firstname "+firstName+" not found");
                 responseData.setData(null);
                 responseData.setStatus(false);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseData);
@@ -63,7 +63,7 @@ public class AuthorController {
     }
 
     /**
-     * Find Author by Firstname and LastName
+     * Find AuthorEvent by Firstname and LastName
      * */
     @GetMapping("/{firstName}/{lastName}")
     public ResponseEntity<ResponseData<Author>> getAuthor(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) {
@@ -74,7 +74,7 @@ public class AuthorController {
             Author author1 = authorService.getAuthor(firstName, lastName);
 
             if(author1 == null){
-                responseData.getMessages().add("Author with firstname "+firstName+" not found");
+                responseData.getMessages().add("AuthorEvent with firstname "+firstName+" not found");
                 responseData.setData(null);
                 responseData.setStatus(false);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseData);
@@ -92,7 +92,7 @@ public class AuthorController {
     }
 
     /**
-     * Delete Author By ID
+     * Delete AuthorEvent By ID
      * */
     @DeleteMapping("{id}")
     public ResponseEntity<ResponseData<String>> deleteAuthor(@PathVariable("id") String id) {
@@ -103,7 +103,7 @@ public class AuthorController {
 
             responseData.setStatus(true);
             responseData.setData(null);
-            responseData.getMessages().add("Author deleted successfully");
+            responseData.getMessages().add("AuthorEvent deleted successfully");
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){

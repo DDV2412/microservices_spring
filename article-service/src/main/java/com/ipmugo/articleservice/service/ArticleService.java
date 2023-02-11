@@ -1,6 +1,8 @@
 package com.ipmugo.articleservice.service;
 
 import com.ipmugo.articleservice.dto.ResponseJournalService;
+import com.ipmugo.articleservice.event.ArticleEvent;
+import com.ipmugo.articleservice.event.AuthorEvent;
 import com.ipmugo.articleservice.model.Author;
 import com.ipmugo.articleservice.model.Journal;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_dc.OaiDcType;
@@ -17,8 +19,8 @@ import com.ipmugo.articleservice.model.Article;
 import com.ipmugo.articleservice.repository.ArticleRepository;
 import com.ipmugo.articleservice.utils.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.w3c.dom.Element;
@@ -47,6 +49,9 @@ public class ArticleService {
     private JournalService journalService;
     @Autowired
     private WebClient.Builder webClientBuilder;
+
+    @Autowired
+    private KafkaTemplate<String, ArticleEvent> kafkaTemplate;
     /**
      * Save Article
      * */
@@ -106,7 +111,11 @@ public class ArticleService {
                     .citationByScopus(articleRequest.getCitationByScopus())
                     .build();
 
-            return articleRepository.save(article);
+            Article save = articleRepository.save(article);
+
+            this.kafkaSend(save);
+
+            return save;
         }catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -163,7 +172,11 @@ public class ArticleService {
             article.setKeywords(articleRequest.getKeywords());
             article.setPublishStatus(article.getPublishStatus());
 
-            return articleRepository.save(article);
+            Article save = articleRepository.save(article);
+
+            this.kafkaSend(save);
+
+            return save;
         }catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -204,6 +217,12 @@ public class ArticleService {
         try{
             this.getArticle(id);
 
+            String deleteArticle = webClientBuilder.build().delete()
+                    .uri("http://search-service/api/search/"+ id)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
             articleRepository.deleteById(id);
 
         }catch (Exception e){
@@ -228,7 +247,7 @@ public class ArticleService {
      * Multiple Method
      * Protocol AOI DC
      */
-    public void getOaiPmh(String id, String protocolType) throws CustomException {
+    public void getOaiPmh(String id, String protocolType, String startDate, String untilDate) throws CustomException {
        try{
 
            Journal journal = journalService.getJournal(id);
@@ -266,7 +285,7 @@ public class ArticleService {
                    .build();
 
            OAIPMHtype oaipmHtype = webClient.get()
-                   .uri("?verb=ListRecords&metadataPrefix=" + protocolType +"&set="+ journal.getAbbreviation())
+                   .uri("?verb=ListRecords&metadataPrefix=" + protocolType +"&set="+ journal.getAbbreviation() + "&from="+ startDate +"&until=" + untilDate)
                    .retrieve()
                    .bodyToMono(OAIPMHtype.class)
                    .timeout(Duration.ofSeconds(100)).block();
@@ -548,7 +567,10 @@ public class ArticleService {
                     Optional<Article> articleCheck = articleRepository.findByDoi(doi);
 
                     if(articleCheck.isEmpty()){
-                        articleRepository.save(articleBuild);
+                        Article save = articleRepository.save(articleBuild);
+
+                        this.kafkaSend(save);
+
                     }else {
                         if(!Objects.equals(articleCheck.get().getLastModifier(), lastModifier)){
 
@@ -567,7 +589,10 @@ public class ArticleService {
                             articleCheck.get().setArticlePdf(articlePdf);
                             articleCheck.get().setKeywords(keywordList);
                             articleCheck.get().setPublishStatus(publishStatus);
-                            articleRepository.save(articleCheck.get());
+
+                            Article save = articleRepository.save(articleCheck.get());
+
+                            this.kafkaSend(save);
                         }
                     }
                 }
@@ -727,7 +752,7 @@ public class ArticleService {
                         }
 
                         /**
-                         * Get Author
+                         * Get AuthorEvent
                          * ID 720
                          * Id1 1
                          * Label a
@@ -801,7 +826,9 @@ public class ArticleService {
                 Optional<Article> articleCheck = articleRepository.findByTitleAndOjsId(title, ojsId);
 
                 if(articleCheck.isEmpty()){
-                    articleRepository.save(articleBuild);
+                    Article save = articleRepository.save(articleBuild);
+
+                    this.kafkaSend(save);
                 }else {
                     if(!Objects.equals(articleCheck.get().getLastModifier(), lastModifier)){
 
@@ -817,12 +844,53 @@ public class ArticleService {
                         articleCheck.get().setKeywords(keywordList);
                         articleCheck.get().setDoi(doi);
                         articleCheck.get().setPublishStatus(publishStatus);
-                        articleRepository.save(articleCheck.get());
+                        Article save = articleRepository.save(articleCheck.get());
+
+                        this.kafkaSend(save);
                     }
                 }
             }
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
+    }
+
+
+    private void kafkaSend(Article article){
+        com.ipmugo.articleservice.event.Journal journal = com.ipmugo.articleservice.event.Journal.builder()
+                .id(article.getJournal().getId())
+                .name(article.getJournal().getName())
+                .issn(article.getJournal().getIssn())
+                .e_issn(article.getJournal().getE_issn())
+                .publisher(article.getJournal().getPublisher())
+                .build();
+
+        Set<AuthorEvent> authorEvents = new HashSet<>();
+
+        for(Author author: article.getAuthors()){
+           authorEvents.add(AuthorEvent.builder()
+                   .id(author.getId())
+                   .firstName(author.getFirstName())
+                   .lastName(author.getLastName())
+                   .affiliation(author.getAffiliation())
+                   .build());
+        }
+
+        kafkaTemplate.send("article", ArticleEvent.builder()
+                .id(article.getId())
+                        .journal(journal)
+                        .title(article.getTitle())
+                        .pages(article.getPages())
+                        .publishYear(article.getPublishYear())
+                        .lastModifier(article.getLastModifier())
+                        .publishDate(article.getPublishDate())
+                        .doi(article.getDoi())
+                        .volume(article.getVolume())
+                        .issue(article.getIssue())
+                        .publishStatus(article.getPublishStatus())
+                        .abstractText(article.getAbstractText())
+                        .authorEvents(authorEvents)
+                        .keywords(article.getKeywords())
+                .build());
     }
 }
