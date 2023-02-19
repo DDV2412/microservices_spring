@@ -1,91 +1,84 @@
 package com.ipmugo.journalservice.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Set;
+import java.util.UUID;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import javax.persistence.*;
 
-@Document(value = "journal")
+@Table(name = "journal")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Data
+@Entity
+@Getter
+@Setter
 public class Journal {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
-    @Field
+    @Column
     private String name;
 
-    @Field
-    @Indexed(unique = true, name = "issn")
+    @Column(unique = true)
     private String issn;
 
-    @Field
-    @Indexed(unique = true, name = "e_issn")
+    @Column(unique = true)
     private String e_issn;
 
-    @Field
-    @Indexed(unique = true, name = "abbreviation")
+    @Column(unique = true)
     private String abbreviation;
 
-    @Field
+    @Column
     private String thumbnail;
 
-    @Field
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Field
+    @Column
     private String publisher;
 
-    @Field
-    @Indexed(unique = true, name="journalSite")
+    @Column(unique = true)
     private String journalSite;
 
-    @Field
+    @Column
     private String country;
 
-    @Field
+    @Column
     private String focusScope;
 
-    @Field
+    @Column
     private String authorGuidelines;
 
-    @Field
+    @Column
     private String privacyStatement;
 
-    @Field
+    @Column
     private String license;
 
-    @Field
+    @Column
     private BigDecimal authorFees;
 
-    @Field
+    @Column
     private String reviewPolice;
 
-    @CreatedDate
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private Timestamp updatedAt;
 
-    @LastModifiedDate
-    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private Timestamp createdAt;
 
-    @DBRef
+    @ManyToMany(mappedBy = "journals", fetch = FetchType.EAGER)
     private Set<Category> categoriesList;
 
-    @DBRef
+    @OneToOne(mappedBy = "journal", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private CitationReport journalCitationReport;
 
 }

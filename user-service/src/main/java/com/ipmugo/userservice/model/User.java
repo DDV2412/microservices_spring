@@ -1,108 +1,96 @@
 package com.ipmugo.userservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@Document(value = "user")
+@Entity
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
 public class User implements UserDetails {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
     @NotBlank(message = "FirstName cannot be blank")
-    @Field
+    @Column
     private String firstName;
 
     @NotBlank(message = "LastName cannot be blank")
-    @Field
+    @Column
     private  String lastName;
 
     @NotBlank(message = "Email cannot be blank")
     @Email(message = "Email must be a valid email address")
-    @Field
-    @Indexed(unique = true)
+    @Column(unique = true)
     private String email;
 
     @NotBlank(message = "Password cannot be blank")
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[!@#$%^&])(?=.*[0-9])(?=.*[a-z]).{10,}$", message = "Password must contain at least one uppercase letter, one special character, one number and one lowercase letter, and must be at least 10 characters long")
     @Size(min = 10, message = "Password must be at least 10 characters long")
-    @Field
+    @Column
     private String password;
 
-    @Field
+    @Column
     private String affiliation;
 
-    @Field(targetType = FieldType.STRING)
+    @Column(columnDefinition = "TEXT")
     private String biography;
 
-    @Field
+    @Column
     private String orcid;
 
-    @Field
+    @Column
     private String scopusId;
 
-    @Field
+    @Column
     private String googleScholar;
 
-    @Field
-    @Indexed(unique = true)
+    @Column(unique = true)
     @NotBlank(message = "Username cannot be blank")
     @Size(min = 10, message = "Username must be at least 10 characters long")
     private String username;
 
-    @Field
+    @Column
     private boolean isVerify;
 
-    @Field
+    @Column
     private String photoProfile;
 
-    @Field
-    private List<String> interests;
+    @UpdateTimestamp
+    private Timestamp updatedAt;
 
-    @CreatedDate
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private Timestamp createdAt;
 
-    @LastModifiedDate
-    private LocalDateTime createdAt;
-
+    @Column
     private boolean isEnabled;
 
-    @DBRef
+    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private AuthorScholarMetric authorScholarMetric;
 
-    @DBRef
-    private Set<AuthorScholarProfile> authorScholarProfile;
+    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private AuthorScholarProfile authorScholarProfile;
 
-    @DBRef
-    private Set<Role> roles = new HashSet<>();
+    @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
+    private Set<Role> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

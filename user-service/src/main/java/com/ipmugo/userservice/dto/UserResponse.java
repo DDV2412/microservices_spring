@@ -7,15 +7,13 @@ import lombok.NoArgsConstructor;
 import com.ipmugo.userservice.model.Role;
 import com.ipmugo.userservice.model.User;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Data
@@ -25,7 +23,7 @@ import java.util.stream.Collectors;
 public class UserResponse implements UserDetails {
 
     @Id
-    private String id;
+    private UUID id;
 
     private String token;
 
@@ -53,7 +51,7 @@ public class UserResponse implements UserDetails {
 
     private List<String> interests;
 
-    @DBRef
+    @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
 
     @Override
@@ -83,10 +81,9 @@ public class UserResponse implements UserDetails {
         return true;
     }
 
-    public UserResponse getBuilder(User user, String jwt ){
+    public UserResponse getBuilder(User user){
         return UserResponse.builder()
                 .id(user.getId())
-                .token(jwt)
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .affiliation(user.getAffiliation())

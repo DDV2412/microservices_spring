@@ -1,7 +1,7 @@
 package com.ipmugo.userservice.service;
 
 import com.ipmugo.userservice.model.Role;
-import com.ipmugo.userservice.model.RoleEnum;
+import com.ipmugo.userservice.model.UserRole;
 import com.ipmugo.userservice.repository.RoleRepository;
 import com.ipmugo.userservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +40,20 @@ public class RoleService {
     }
 
     /***
+     * Find AllRole by Name
+     */
+    public Iterable<Role> getAllRole() throws CustomException{
+        try{
+            return roleRepository.findAll();
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /***
      * Find Role by Name
      */
-    public Role getRole(RoleEnum roleEnum) throws CustomException{
+    public Role getRole(UserRole roleEnum) throws CustomException{
         try{
             Optional<Role> roleCheck = roleRepository.findByName(roleEnum);
 
@@ -58,7 +69,7 @@ public class RoleService {
     /***
      * Update Role By roleName
      */
-    public Role updateRole(Role role, RoleEnum roleEnum) throws CustomException{
+    public Role updateRole(Role role, UserRole roleEnum) throws CustomException{
         try{
             Role updateRole = this.getRole(roleEnum);
             updateRole.setName(role.getName());
@@ -72,7 +83,7 @@ public class RoleService {
     /***
      * Delete Role by Role Name
      */
-    public void deleteRole(RoleEnum roleEnum) throws CustomException{
+    public void deleteRole(UserRole roleEnum) throws CustomException{
         try{
             Role updateRole = this.getRole(roleEnum);
 

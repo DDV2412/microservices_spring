@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -39,13 +38,19 @@ public class ArticleEvent {
 
     private String abstractText;
 
-    private List<HashMap<String, String>> keywords;
+    private Set<KeywordEvent> keywordEvents;
 
     private Set<AuthorEvent> authorEvents;
 
-    private CitationScopusEvent citationByScopus;
+    private List<String> figures;
 
-    private CitationCrossRefEvent citationByCrossRef;
+    private int citationByScopus;
+
+    private int citationByCrossRef;
+
+    private int viewsCount;
+
+    private  int downloadCount;
 
 }
 

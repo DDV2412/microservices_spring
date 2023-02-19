@@ -1,6 +1,7 @@
 package com.ipmugo.journalservice.service;
 
 import com.ipmugo.journalservice.dto.*;
+import com.ipmugo.journalservice.event.JournalEvent;
 import com.ipmugo.journalservice.model.CitationReport;
 import com.ipmugo.journalservice.model.Journal;
 import com.ipmugo.journalservice.repository.CitationReportRepository;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -39,6 +41,8 @@ public class CitationReportService {
     @Value("${scopus.api.key.secret}")
     private String apiKey;
 
+    @Autowired
+    private KafkaTemplate<String, JournalEvent> kafkaTemplate;
 
     /**
      * Sync Journal Citation Report
@@ -78,6 +82,7 @@ public class CitationReportService {
             CiteScoreYearInfoList citeScoreYearInfoLists = citationReportScopuses.get(0).getCiteScoreYearInfoList();
 
             CitationReport citationReport = CitationReport.builder()
+                    .journal(journal.get())
                     .sjr(Double.parseDouble(sjr.get(0).getData()))
                     .snip(Double.parseDouble(snip.get(0).getData()))
                     .citeScoreCurrent(Double.parseDouble(citeScoreYearInfoLists.getCiteScoreCurrentMetric()))
@@ -88,7 +93,18 @@ public class CitationReportService {
 
             journal.get().setJournalCitationReport(citationReportRepository.save(citationReport));
 
-            journalRepository.save(journal.get());
+            Journal saveJournal = journalRepository.save(journal.get());
+
+            kafkaTemplate.send("journal", JournalEvent.builder()
+                    .id(saveJournal.getId())
+                    .name(saveJournal.getName())
+                    .issn(saveJournal.getIssn())
+                    .e_issn(saveJournal.getE_issn())
+                    .publisher(saveJournal.getPublisher())
+                    .abbreviation(saveJournal.getAbbreviation())
+                    .journalSite(saveJournal.getJournalSite())
+                            .scopusIndex(true)
+                    .build());
 
             return citationReport;
 

@@ -37,12 +37,12 @@ public class ProfileController {
 
     /**
      * Get Profile
-     * */
+     */
     @GetMapping("/profile")
-    public ResponseEntity<ResponseData<UserResponse>> getProfile(@RequestHeader("accessToken") String token){
+    public ResponseEntity<ResponseData<UserResponse>> getProfile(@RequestHeader("accessToken") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
-        try{
+        try {
             /**
              * Parsing JWT Token
              * Bearer and Token
@@ -54,7 +54,7 @@ public class ProfileController {
              * */
             if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
                 responseData.setStatus(false);
-                responseData.getMessages().add(String.format("Invalid JWT signature "+ jwt));
+                responseData.getMessages().add(String.format("Invalid JWT signature " + jwt));
 
                 return ResponseEntity.internalServerError().body(responseData);
             }
@@ -64,11 +64,11 @@ public class ProfileController {
             User profile = userService.getProfile(username);
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(profile, ""));
+            responseData.setData(new UserResponse().getBuilder(profile));
 
             return ResponseEntity.ok(responseData);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             responseData.setStatus(false);
             responseData.getMessages().add(e.getMessage());
 
@@ -78,13 +78,13 @@ public class ProfileController {
 
     /**
      * Update Profile
-     * */
+     */
     @PutMapping("/profile/update")
-    public ResponseEntity<ResponseData<UserResponse>> updateProfile(@Valid @RequestBody ProfileUpdate user, Errors errors, @RequestHeader("accessToken") String token){
+    public ResponseEntity<ResponseData<UserResponse>> updateProfile(@Valid @RequestBody ProfileUpdate user, Errors errors, @RequestHeader("accessToken") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
-            for (ObjectError error : errors.getAllErrors()){
+            for (ObjectError error : errors.getAllErrors()) {
                 responseData.getMessages().add(error.getDefaultMessage());
             }
 
@@ -92,7 +92,7 @@ public class ProfileController {
 
             return ResponseEntity.badRequest().body(responseData);
         }
-        try{
+        try {
             /**
              * Parsing JWT Token
              * Bearer and Token
@@ -104,7 +104,7 @@ public class ProfileController {
              * */
             if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
                 responseData.setStatus(false);
-                responseData.getMessages().add(String.format("Invalid JWT signature "+ jwt));
+                responseData.getMessages().add(String.format("Invalid JWT signature " + jwt));
 
                 return ResponseEntity.internalServerError().body(responseData);
             }
@@ -114,11 +114,11 @@ public class ProfileController {
             User updateUser = userService.updateProfile(user, username);
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(updateUser, ""));
+            responseData.setData(new UserResponse().getBuilder(updateUser));
 
             return ResponseEntity.ok(responseData);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             responseData.setStatus(false);
             responseData.getMessages().add(e.getMessage());
 
@@ -128,13 +128,13 @@ public class ProfileController {
 
     /**
      * Update Password
-     * */
+     */
     @PutMapping("/password/update")
-    public ResponseEntity<ResponseData<UserResponse>> updatePassword(@Valid @RequestBody PasswordRequest passwordRequest, Errors errors, @RequestHeader("accessToken") String token){
+    public ResponseEntity<ResponseData<UserResponse>> updatePassword(@Valid @RequestBody PasswordRequest passwordRequest, Errors errors, @RequestHeader("accessToken") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
-            for (ObjectError error : errors.getAllErrors()){
+            for (ObjectError error : errors.getAllErrors()) {
                 responseData.getMessages().add(error.getDefaultMessage());
             }
 
@@ -142,87 +142,6 @@ public class ProfileController {
 
             return ResponseEntity.badRequest().body(responseData);
         }
-
-        try{
-
-            /**
-             * Parsing JWT Token
-             * Bearer and Token
-             * */
-            String jwt = jwtUtils.parseJwt(token);
-
-            /**
-             * Checking token not null and token valid
-             * */
-            if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
-                responseData.setStatus(false);
-                responseData.getMessages().add(String.format("Invalid JWT signature "+ jwt));
-
-                return ResponseEntity.internalServerError().body(responseData);
-            }
-
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-
-            User updateUser = userService.updatePassword(passwordRequest, username);
-
-            responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(updateUser, ""));
-
-            return ResponseEntity.ok(responseData);
-        }catch (Exception e){
-            responseData.setStatus(false);
-            responseData.getMessages().add(e.getMessage());
-
-            return ResponseEntity.internalServerError().body(responseData);
-        }
-    }
-
-    /**
-     * Delete Account
-     * */
-
-    @DeleteMapping("/profile/delete")
-    public ResponseEntity<ResponseData<UserResponse>> deleteAccount(@RequestHeader("accessToken") String token){
-        ResponseData<UserResponse> responseData = new ResponseData<>();
-
-
-        try{
-            /**
-             * Parsing JWT Token
-             * Bearer and Token
-             * */
-            String jwt = jwtUtils.parseJwt(token);
-
-            /**
-             * Checking token not null and token valid
-             * */
-            if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
-                responseData.setStatus(false);
-                responseData.getMessages().add(String.format("Invalid JWT signature "+ jwt));
-
-                return ResponseEntity.internalServerError().body(responseData);
-            }
-
-            String username = jwtUtils.getUserNameFromJwtToken(jwt);
-
-            User updateUser = userService.deleteAccount(username);
-
-            responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(updateUser, ""));
-
-            return ResponseEntity.ok(responseData);
-        }catch (Exception e){
-            responseData.setStatus(false);
-            responseData.getMessages().add(e.getMessage());
-
-            return ResponseEntity.internalServerError().body(responseData);
-        }
-    }
-
-    @PostMapping("/assign-interest")
-    public ResponseEntity<ResponseData<UserResponse>> assignInterest(@RequestBody List<String> interests, @RequestHeader("accessToken") String token) {
-        ResponseData<UserResponse> responseData = new ResponseData<>();
-
 
         try {
 
@@ -244,10 +163,52 @@ public class ProfileController {
 
             String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
-            User updateUser = userService.assignInterest(username, interests);
+            User updateUser = userService.updatePassword(passwordRequest, username);
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(updateUser, ""));
+            responseData.setData(new UserResponse().getBuilder(updateUser));
+
+            return ResponseEntity.ok(responseData);
+        } catch (Exception e) {
+            responseData.setStatus(false);
+            responseData.getMessages().add(e.getMessage());
+
+            return ResponseEntity.internalServerError().body(responseData);
+        }
+    }
+
+    /**
+     * Delete Account
+     */
+
+    @DeleteMapping("/profile/delete")
+    public ResponseEntity<ResponseData<UserResponse>> deleteAccount(@RequestHeader("accessToken") String token) {
+        ResponseData<UserResponse> responseData = new ResponseData<>();
+
+
+        try {
+            /**
+             * Parsing JWT Token
+             * Bearer and Token
+             * */
+            String jwt = jwtUtils.parseJwt(token);
+
+            /**
+             * Checking token not null and token valid
+             * */
+            if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
+                responseData.setStatus(false);
+                responseData.getMessages().add(String.format("Invalid JWT signature " + jwt));
+
+                return ResponseEntity.internalServerError().body(responseData);
+            }
+
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+
+            User updateUser = userService.deleteAccount(username);
+
+            responseData.setStatus(true);
+            responseData.setData(new UserResponse().getBuilder(updateUser));
 
             return ResponseEntity.ok(responseData);
         } catch (Exception e) {

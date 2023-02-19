@@ -1,11 +1,8 @@
-F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\security\JwtFilter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\model\CitationReport.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\JournalRequest.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\service\CategoryService.java
-F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\Authority.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\config\WebClientConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\JournalCitation.java
-F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\UserDetailsImpl.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\utils\CustomException.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\repository\CitationReportRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\event\JournalEvent.java
@@ -16,8 +13,8 @@ F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ip
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\controller\CategoryController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\SerialMetadataResponse.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\model\Journal.java
-F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\security\WebSecurityConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\service\CitationReportService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\utils\Automate.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\CiteScoreYearInfoList.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\dto\SNIPList.java
 F:\Project\MICROSERVICE\ipmugo-microservice\journal-service\src\main\java\com\ipmugo\journalservice\service\JournalService.java

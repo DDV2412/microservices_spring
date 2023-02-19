@@ -1,33 +1,31 @@
 package com.ipmugo.userservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.*;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Document(value = "otp")
+@Entity
+@Table(name = "otp")
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Setter
+@Getter
 @Builder
 public class OneTimePassword {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
-    @Field
+    @Column
     private String email;
 
-    @Field
-    @Indexed(unique = true)
+    @Column(unique = true)
     private Integer otp;
 
+    @Column
     private LocalDateTime expiredAt;
 
 }

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -112,8 +113,8 @@ public class AuthController {
      * Setup Account User
      * */
     @PostMapping("/setup-account")
-    public ResponseEntity<ResponseData<UserResponse>> setupAccount(@Valid @RequestBody RegisterRequest registerRequest, Errors errors){
-        ResponseData<UserResponse> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<String>> setupAccount(@Valid @RequestBody RegisterRequest registerRequest, Errors errors){
+        ResponseData<String> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
             for (ObjectError error : errors.getAllErrors()){
@@ -131,7 +132,7 @@ public class AuthController {
             oneTimePasswordService.deleteOtp(registerRequest.getEmail());
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(user, ""));
+            responseData.getMessages().add("Registered account successfully");
             return  ResponseEntity.ok(responseData);
 
         }catch (CustomException e){
@@ -146,9 +147,9 @@ public class AuthController {
      * User Authentication with Login
      * */
     @PostMapping("/login")
-    public ResponseEntity<ResponseData<UserResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, Errors errors) {
+    public ResponseEntity<ResponseData<HashMap<String, String>>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, Errors errors) {
 
-        ResponseData<UserResponse> responseData = new ResponseData<>();
+        ResponseData<HashMap<String, String>> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
             for (ObjectError error : errors.getAllErrors()){
@@ -169,8 +170,11 @@ public class AuthController {
 
             User userDetails = (User) authentication.getPrincipal();
 
+            HashMap<String, String> token = new HashMap<>();
+            token.put("token", jwt);
+
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(userDetails, jwt));
+            responseData.setData(token);
 
             return ResponseEntity.ok(responseData);
         }catch (Exception e){
@@ -178,6 +182,30 @@ public class AuthController {
             responseData.setData(null);
             responseData.setStatus(false);
             return ResponseEntity.status(HttpStatus.NETWORK_AUTHENTICATION_REQUIRED).body(responseData);
+        }
+    }
+
+
+    /**
+     * User Authentication with Login
+     * */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ResponseData<String>> forgotPassword(@RequestBody String email) {
+
+        ResponseData<String> responseData = new ResponseData<>();
+
+
+        try{
+            userService.forgotPassword(email);
+
+            responseData.setStatus(true);
+            responseData.setData("Request new password successfully");
+            return ResponseEntity.ok(responseData);
+        }catch (Exception e){
+            responseData.getMessages().add(e.getMessage());
+            responseData.setData(null);
+            responseData.setStatus(false);
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(responseData);
         }
     }
 }

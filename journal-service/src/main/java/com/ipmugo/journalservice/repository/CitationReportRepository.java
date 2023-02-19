@@ -1,7 +1,9 @@
 package com.ipmugo.journalservice.repository;
 
 import com.ipmugo.journalservice.model.CitationReport;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CitationReportRepository extends MongoRepository<CitationReport, String> {
+import java.util.UUID;
+
+public interface CitationReportRepository extends JpaRepository<CitationReport, UUID> {
 }

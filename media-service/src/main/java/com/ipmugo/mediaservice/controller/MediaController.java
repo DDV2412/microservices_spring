@@ -9,6 +9,11 @@ import com.ipmugo.mediaservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +51,6 @@ public class MediaController {
      * Save Single Image
      * */
     @PostMapping("/upload/image")
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ResponseData<String>> uploadImage(@RequestParam("image") MultipartFile file) {
         MediaRequest mediaRequest = new MediaRequest();
         ResponseData<String> responseData = new ResponseData<>();
@@ -89,7 +93,6 @@ public class MediaController {
     }
 
     @PostMapping("/upload/document")
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ResponseData<String>> uploadDocument(@RequestParam("document") MultipartFile file) {
         MediaRequest mediaRequest = new MediaRequest();
         ResponseData<String> responseData = new ResponseData<>();
@@ -132,7 +135,6 @@ public class MediaController {
     }
 
     @PostMapping("/upload/multiple/image")
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ResponseData<List<String>>> multipleUploadImage(@RequestParam("images") List<MultipartFile> files) {
 
         ResponseData<List<String>> responseData = new ResponseData<>();
@@ -184,7 +186,6 @@ public class MediaController {
     }
 
     @PostMapping("/upload/multiple/document")
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ResponseData<List<String>>> multipleUploadDocument(@RequestParam("documents") List<MultipartFile> files) {
 
         ResponseData<List<String>> responseData = new ResponseData<>();
@@ -239,9 +240,9 @@ public class MediaController {
     public ResponseEntity<byte[]> getImage(@PathVariable("id") String id) {
         try{
 
-            id = id.split("-")[1];
+            String fileId = id.substring(6);
 
-            Image media = mediaService.getImage(id);
+            Image media = mediaService.getImage(UUID.fromString(fileId));
             return ResponseEntity.ok().contentType(MediaType.valueOf(media.getFileType())).body(media.getFileByte());
         }catch (Exception e){
             return ResponseEntity.badRequest().body(null);
@@ -249,11 +250,11 @@ public class MediaController {
     }
 
     @GetMapping("/file/view/{id}")
-    public ResponseEntity<byte[]> getMedia(@PathVariable("id") String id) {
+    public ResponseEntity<byte[]> getDocument(@PathVariable("id") String id) {
         try{
 
-            id = id.split("-")[1];
-            Document media = mediaService.getDocument(id);
+            String fileId = id.substring(6);
+            Document media = mediaService.getDocument(UUID.fromString(fileId));
             return ResponseEntity.ok().contentType(MediaType.valueOf(media.getFileType())).body(media.getFileByte());
         }catch (Exception e){
             return ResponseEntity.badRequest().body(null);
@@ -261,12 +262,13 @@ public class MediaController {
     }
 
     @GetMapping("/upload/view/images")
-    public ResponseEntity<ResponseData<List<Image>>> getAllImage() {
-        ResponseData<List<Image>> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<Page<Image>>> getAllImage(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size) {
+        ResponseData<Page<Image>> responseData = new ResponseData<>();
 
         try{
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size));
             responseData.setStatus(true);
-            responseData.setData(mediaService.getAllImage());
+            responseData.setData(mediaService.getAllImage(pageable));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e) {
@@ -278,12 +280,14 @@ public class MediaController {
     }
 
     @GetMapping("/upload/view/documents")
-    public ResponseEntity<ResponseData<List<Document>>> getAllDocuments() {
-        ResponseData<List<Document>> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<Page<Document>>> getAllDocuments(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size) {
+        ResponseData<Page<Document>> responseData = new ResponseData<>();
 
         try{
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size));
+
             responseData.setStatus(true);
-            responseData.setData(mediaService.getAllDocuments());
+            responseData.setData(mediaService.getAllDocuments(pageable));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e) {
@@ -299,9 +303,9 @@ public class MediaController {
         ResponseData<String> responseData = new ResponseData<>();
 
         try{
-            id = id.split("-")[1];
+            String fileId = id.substring(6);
 
-            mediaService.deleteImage(id);
+            mediaService.deleteImage(UUID.fromString(fileId));
             responseData.setStatus(true);
             responseData.setData(null);
             responseData.getMessages().add("Image with id " + id + " deleted successfully");
@@ -319,9 +323,9 @@ public class MediaController {
         ResponseData<String> responseData = new ResponseData<>();
 
         try{
-            id = id.split("-")[1];
+            String fileId = id.substring(6);
 
-            mediaService.deleteDocument(id);
+            mediaService.deleteDocument(UUID.fromString(fileId));
             responseData.setStatus(true);
             responseData.setData(null);
             responseData.getMessages().add("Document with id " + id + " deleted successfully");
@@ -333,4 +337,6 @@ public class MediaController {
             return ResponseEntity.status(e.getStatusCode()).body(responseData);
         }
     }
+
+
 }

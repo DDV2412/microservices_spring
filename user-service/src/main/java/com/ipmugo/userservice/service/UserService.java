@@ -1,23 +1,27 @@
 package com.ipmugo.userservice.service;
 
+import com.ipmugo.userservice.dto.*;
+import com.ipmugo.userservice.event.AuthorAssignEvent;
+import com.ipmugo.userservice.model.UserRole;
+import com.ipmugo.userservice.utils.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.ipmugo.userservice.dto.PasswordRequest;
-import com.ipmugo.userservice.dto.ProfileUpdate;
-import com.ipmugo.userservice.dto.RegisterRequest;
 import com.ipmugo.userservice.model.Role;
-import com.ipmugo.userservice.model.RoleEnum;
 import com.ipmugo.userservice.model.User;
 import com.ipmugo.userservice.repository.RoleRepository;
 import com.ipmugo.userservice.repository.UserRepository;
 import com.ipmugo.userservice.utils.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
@@ -35,6 +39,13 @@ public class UserService implements UserDetailsService {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+
+    @Autowired
+    private PasswordGenerator passwordGenerator;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder;
+
     /**
      * Load User by Username
      * */
@@ -48,20 +59,16 @@ public class UserService implements UserDetailsService {
     /**
      * Register User
      * */
-    public User registerUser(RegisterRequest registerRequest) throws CustomException{
-        try{
-            Optional<Role> role = roleRepository.findByName(RoleEnum.Reader);
+    public User registerUser(RegisterRequest registerRequest) throws CustomException {
+        try {
+            Optional<Role> role = roleRepository.findByName(UserRole.Reader);
 
-            if(userRepository.existsByEmail(registerRequest.getEmail()) || userRepository.existsByUsername(registerRequest.getUsername()) || role.isEmpty()){
+            if (userRepository.existsByEmail(registerRequest.getEmail()) || userRepository.existsByUsername(registerRequest.getUsername()) || role.isEmpty()) {
                 throw new CustomException(String.format("User with Email '%s' or Username '%s' not Available", registerRequest.getEmail(), registerRequest.getUsername()), HttpStatus.BAD_GATEWAY);
             }
 
-            Set<Role> roles = new HashSet<>();
-
-            Role assignRole = roleRepository.findByName(RoleEnum.Reader)
+            Role assignRole = roleRepository.findByName(UserRole.Reader)
                     .orElseThrow(() -> new CustomException("Role is not found.", HttpStatus.NOT_FOUND));
-
-            roles.add(assignRole);
 
             User user = User.builder()
                     .firstName(registerRequest.getFirstName())
@@ -71,13 +78,17 @@ public class UserService implements UserDetailsService {
                     .password(bCryptPasswordEncoder.encode(registerRequest.getPassword()))
                     .isVerify(true)
                     .isEnabled(true)
-                    .roles(roles)
                     .build();
 
 
+            User save = userRepository.save(user);
 
-            return userRepository.save(user);
-        }catch (Exception e){
+            assignRole.getUsers().add(save);
+
+            roleRepository.save(assignRole);
+
+            return save;
+        } catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
@@ -103,7 +114,6 @@ public class UserService implements UserDetailsService {
             exitsUser.get().setGoogleScholar(user.getGoogleScholar());
             exitsUser.get().setUsername(user.getUsername());
             exitsUser.get().setPhotoProfile(user.getPhotoProfile());
-            exitsUser.get().setInterests(user.getInterests());
 
             return userRepository.save(exitsUser.get());
 
@@ -185,15 +195,23 @@ public class UserService implements UserDetailsService {
                     .scopusId(user.getScopusId())
                     .googleScholar(user.getGoogleScholar())
                     .photoProfile(user.getPhotoProfile())
-                    .interests(user.getInterests())
                     .isVerify(true)
                     .isEnabled(true)
-                    .roles(user.getRoles())
                     .build();
 
 
+            User save = userRepository.save(userData);
 
-            return userRepository.save(userData);
+            for(Role role: user.getRoles()){
+                Role assignRole = roleRepository.findByName(role.getName())
+                        .orElseThrow(() -> new CustomException("Role is not found.", HttpStatus.NOT_FOUND));
+
+                assignRole.getUsers().add(save);
+
+                roleRepository.save(assignRole);
+            }
+
+            return save;
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -202,7 +220,7 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Get User By id
      * */
-    public User getUser(String id) throws CustomException{
+    public User getUser(UUID id) throws CustomException{
         try {
             Optional<User> user = userRepository.findById(id);
 
@@ -219,9 +237,13 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Get All User
      * */
-    public Iterable<User> getAllUser() throws CustomException{
+    public Page<User> getAllUser(Pageable pageable, String searchTerm) throws CustomException{
         try {
-            return userRepository.findAll();
+            if(searchTerm == null ||searchTerm.isEmpty()){
+                return userRepository.findAll(pageable);
+            }
+
+            return userRepository.searchTerm(pageable, searchTerm);
 
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
@@ -231,7 +253,7 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Disable User
      * */
-    public void disableAccount(String id) throws CustomException{
+    public void disableAccount(UUID id) throws CustomException{
         try {
             User user = this.getUser(id);
 
@@ -247,7 +269,7 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Delete Permanent
      * */
-    public void deleteUser(String id)  throws CustomException{
+    public void deleteUser(UUID id)  throws CustomException{
         try {
             this.getUser(id);
 
@@ -261,7 +283,7 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Multiple Delete Permanent
      * */
-    public void multipleDelete(List<String> id)  throws CustomException{
+    public void multipleDelete(List<UUID> id)  throws CustomException{
         try {
             Iterable<User> users= userRepository.findAllById(id);
 
@@ -275,7 +297,7 @@ public class UserService implements UserDetailsService {
     /**
      * Admin Assign User Role
      * */
-    public User assignRole(String id, List<Role> roles) throws CustomException{
+    public User assignRole(UUID id, List<Role> roles) throws CustomException{
         try {
             User user = this.getUser(id);
 
@@ -290,29 +312,9 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * User Assign Interest
-     * */
-    public User assignInterest(String username, List<String> interest) throws CustomException{
-        try {
-            Optional<User> user = userRepository.findByUsername(username);
-
-            if(user.isEmpty()){
-                throw new CustomException("User with username " + username + " not found", HttpStatus.BAD_GATEWAY);
-            }
-
-            user.get().setInterests(interest);
-
-            return userRepository.save(user.get());
-
-        }catch (Exception e){
-            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
-        }
-    }
-
-    /**
      * User Update User
      * */
-    public User updateUser(String id, User user) throws CustomException{
+    public User updateUser(UUID id, User user) throws CustomException{
         try{
             User exitsUser = this.getUser(id);
 
@@ -326,7 +328,6 @@ public class UserService implements UserDetailsService {
             exitsUser.setGoogleScholar(user.getGoogleScholar());
             exitsUser.setUsername(user.getUsername());
             exitsUser.setPhotoProfile(user.getPhotoProfile());
-            exitsUser.setInterests(user.getInterests());
 
             return userRepository.save(exitsUser);
 
@@ -335,6 +336,9 @@ public class UserService implements UserDetailsService {
         }
     }
 
+    /**
+     * Get User Profile
+     * */
     public User getProfile(String username) throws CustomException{
         try{
             Optional<User> user = userRepository.findByUsername(username);
@@ -344,6 +348,49 @@ public class UserService implements UserDetailsService {
             }
 
             return user.get();
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Forgot Password
+     * */
+    public  void forgotPassword(String email) throws CustomException{
+        try{
+            Optional<User> user = userRepository
+                    .findByEmail(email);
+
+            if(user.isEmpty()){
+                throw new CustomException("User with email " + email + " not found", HttpStatus.BAD_GATEWAY);
+            }
+
+            /**
+             * Password generator*/
+            String password = bCryptPasswordEncoder.encode(passwordGenerator.generatePassword());
+
+
+            user.get().setPassword(password);
+
+            userRepository.save(user.get());
+
+            String[] to = {user.get().getFirstName() + " " + user.get().getLastName() + "<" + email + ">"};
+
+            MailRequest mailRequest = MailRequest.builder()
+                    .from("Dian Dwi Vaputra" + "<dhyanputra24@gmail.com>")
+                    .to(to)
+                    .subject("New generate Password")
+                    .body("<p>"+password+"</p>")
+                    .build();
+
+            webClientBuilder.build().post()
+                    .uri("http://mail-service/api/send/mail")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(mailRequest)
+                    .retrieve().
+                    bodyToMono(String.class).
+                    block();
+
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/category")
@@ -57,7 +58,7 @@ public class CategoryController {
      * Update Category
      * */
     @PutMapping("/{id}")
-    public ResponseEntity<ResponseData<Category>> updateCategory(@PathVariable("id") String id, @Valid @RequestBody Category category,
+    public ResponseEntity<ResponseData<Category>> updateCategory(@PathVariable("id") UUID id, @Valid @RequestBody Category category,
                                                                  Errors errors) {
         ResponseData<Category> responseData = new ResponseData<>();
 
@@ -108,7 +109,7 @@ public class CategoryController {
      * Get Category By Name
      * */
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<Category>> getCategory(@PathVariable("id") String id) {
+    public ResponseEntity<ResponseData<Category>> getCategory(@PathVariable("id") UUID id) {
         ResponseData<Category> responseData = new ResponseData<>();
         try{
             responseData.setStatus(true);
@@ -125,12 +126,12 @@ public class CategoryController {
     /**
      * Delete Journal By Name
      * */
-    @DeleteMapping("/{name}")
-    public ResponseEntity<ResponseData<String>> deleteCategory(@PathVariable("name") String name) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ResponseData<String>> deleteCategory(@PathVariable("id") UUID id) {
 
         ResponseData<String> responseData = new ResponseData<>();
         try{
-            categoryService.deleteCategory(name);
+            categoryService.deleteCategory(id);
 
             responseData.setStatus(true);
             responseData.setData(null);

@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class JournalEvent {
 
-    private String id;
+    private UUID id;
 
     private String name;
 
@@ -24,4 +26,6 @@ public class JournalEvent {
     private String publisher;
 
     private String journalSite;
+
+    private boolean scopusIndex;
 }

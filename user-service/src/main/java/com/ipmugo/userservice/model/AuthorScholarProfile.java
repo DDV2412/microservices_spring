@@ -1,29 +1,35 @@
 package com.ipmugo.userservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.*;
 
-@Data
+import javax.persistence.*;
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(value = "authorScholarProfile")
+@Table(name = "authorScholarProfile")
 public class AuthorScholarProfile {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
-    @Field
+    @Column
     private Integer citations;
 
-    @Field
+    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "userId", nullable = false)
+    @JsonBackReference
+    private User user;
+
+    @Column
     private Integer hIndex;
 
-    @Field
+    @Column
     private Integer i10Index;
 }

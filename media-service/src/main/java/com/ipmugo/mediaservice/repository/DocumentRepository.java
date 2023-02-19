@@ -1,11 +1,16 @@
 package com.ipmugo.mediaservice.repository;
 
 import com.ipmugo.mediaservice.model.Document;
-import com.ipmugo.mediaservice.model.Image;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
-public interface DocumentRepository extends MongoRepository<Document, String> {
+public interface DocumentRepository extends JpaRepository<Document, UUID> {
+
+    Page<Document> findAll(Pageable pageable);
+
     Optional<Document> findByFileName(String name);
 }

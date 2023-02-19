@@ -23,6 +23,9 @@
         <module>discovery-server</module>
         <module>user-service</module>
         <module>search-service</module>
+        <module>mail-service</module>
+        <module>set-counter</module>
+        <module>author-service</module>
 
     </modules>
 
@@ -53,7 +56,7 @@
                 <configuration>
                     <excludes>
                         <exclude>
-                            <groupId>org.projectlombok</groupId>
+                            <groupId>org.project-lombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>

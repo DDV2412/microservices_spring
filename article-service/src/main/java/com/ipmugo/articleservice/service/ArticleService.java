@@ -1,10 +1,10 @@
 package com.ipmugo.articleservice.service;
 
-import com.ipmugo.articleservice.dto.ResponseJournalService;
-import com.ipmugo.articleservice.event.ArticleEvent;
-import com.ipmugo.articleservice.event.AuthorEvent;
+import com.ipmugo.articleservice.dto.*;
+import com.ipmugo.articleservice.event.*;
 import com.ipmugo.articleservice.model.Author;
 import com.ipmugo.articleservice.model.Journal;
+import com.ipmugo.articleservice.model.Keyword;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_dc.OaiDcType;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_marc.OaiMarc;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_marc.Varfield;
@@ -14,11 +14,13 @@ import com.ipmugo.articleservice.schema.openarchives.oai.pmh.RecordType;
 import com.ipmugo.articleservice.schema.purl.dc.elements.ElementType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.ipmugo.articleservice.dto.ArticleRequest;
 import com.ipmugo.articleservice.model.Article;
 import com.ipmugo.articleservice.repository.ArticleRepository;
 import com.ipmugo.articleservice.utils.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -51,7 +53,16 @@ public class ArticleService {
     private WebClient.Builder webClientBuilder;
 
     @Autowired
+    private WebClient.Builder webClientWithOutBuilder;
+
+    @Value("${scopus.api.key.secret}")
+    private String apiKey;
+
+    @Autowired
     private KafkaTemplate<String, ArticleEvent> kafkaTemplate;
+
+    @Autowired
+    private KafkaTemplate<String, ArticleAssignEvent> articleAssignEventKafkaTemplate;
     /**
      * Save Article
      * */
@@ -85,6 +96,7 @@ public class ArticleService {
             }
 
             Set<Author> authorSet = new HashSet<>();
+
             for(Author author: articleRequest.getAuthors()){
                 authorSet.add(authorService.addAuthor(author));
             }
@@ -109,6 +121,7 @@ public class ArticleService {
                     .publishStatus(articleRequest.getPublishStatus())
                     .citationByCrossRef(articleRequest.getCitationByCrossRef())
                     .citationByScopus(articleRequest.getCitationByScopus())
+                    .figures(articleRequest.getFigures())
                     .build();
 
             Article save = articleRepository.save(article);
@@ -154,6 +167,11 @@ public class ArticleService {
                 journal = journalService.saveJournal(journalBuilder);
             }
 
+            Set<Author> authorSet = new HashSet<>();
+
+            for(Author author: articleRequest.getAuthors()){
+                authorSet.add(authorService.addAuthor(author));
+            }
 
             article.setJournal(journal);
             article.setOjsId(articleRequest.getOjsId());
@@ -170,11 +188,28 @@ public class ArticleService {
             article.setFullText(articleRequest.getFullText());
             article.setArticlePdf(articleRequest.getArticlePdf());
             article.setKeywords(articleRequest.getKeywords());
-            article.setPublishStatus(article.getPublishStatus());
+            article.setAuthors(authorSet);
+            article.setFigures(articleRequest.getFigures());
+            article.setPublishStatus(articleRequest.getPublishStatus());
 
             Article save = articleRepository.save(article);
 
             this.kafkaSend(save);
+
+            articleAssignEventKafkaTemplate.send("articleAssign", ArticleAssignEvent.builder()
+                            .id(save.getId())
+                            .journal(save.getJournal().getName())
+                            .title(save.getTitle())
+                    .publishDate(save.getPublishDate())
+                    .volume(save.getVolume())
+                    .issue(save.getIssue())
+                    .doi(save.getDoi())
+                    .articlePdf(save.getArticlePdf())
+                    .citationByScopus(save.getCitationByScopus())
+                    .citationByCrossRef(save.getCitationByCrossRef())
+                    .viewsCount(save.getViewsCount())
+                    .downloadCount(save.getDownloadCount())
+                    .build());
 
             return save;
         }catch (Exception e) {
@@ -185,9 +220,13 @@ public class ArticleService {
     /**
      * Get List Article
      * */
-    public List<Article> getAllArticle()throws CustomException{
+    public Page<Article> getAllArticle(Pageable pageable, String searchTerm)throws CustomException{
         try {
-            return articleRepository.findAll();
+            if(searchTerm == null || searchTerm.isEmpty()){
+                return articleRepository.findAll(pageable);
+            }
+
+            return articleRepository.searchTerm(pageable, searchTerm);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -217,12 +256,6 @@ public class ArticleService {
         try{
             this.getArticle(id);
 
-            String deleteArticle = webClientBuilder.build().delete()
-                    .uri("http://search-service/api/search/"+ id)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
-
             articleRepository.deleteById(id);
 
         }catch (Exception e){
@@ -247,7 +280,7 @@ public class ArticleService {
      * Multiple Method
      * Protocol AOI DC
      */
-    public void getOaiPmh(String id, String protocolType, String startDate, String untilDate) throws CustomException {
+    public void getOaiPmh(UUID id, String protocolType, String startDate, String untilDate) throws CustomException {
        try{
 
            Journal journal = journalService.getJournal(id);
@@ -486,7 +519,7 @@ public class ArticleService {
                     keyword = oaiElement.getValue().getSubject().getValue().getValue();
                 }
 
-                List<HashMap<String, String>> keywordList = new ArrayList<>();
+                List<Keyword> keywordList = new ArrayList<>();
 
                 if(keyword != null && !keyword.isEmpty()){
                     keyword = keyword.replaceAll("; ", ";").replaceAll(", ", ";").replaceAll(",", ";");
@@ -494,10 +527,11 @@ public class ArticleService {
                     String[] keywords = keyword.split(";");
 
                     for (String value : keywords) {
-                        HashMap<String, String> hasKey = new HashMap<>();
-                        hasKey.put("name", value);
+                        Keyword keyword1 = Keyword.builder()
+                                .name(value)
+                                .build();
 
-                        keywordList.add(hasKey);
+                        keywordList.add(keyword1);
                     }
                 }
 
@@ -545,8 +579,8 @@ public class ArticleService {
                         publishStatus = "early access";
                     }
 
-                    Article articleBuild = Article.builder()
-                            .journal(journal)
+                    ArticleRequest articleBuild = ArticleRequest.builder()
+                            .journalId(journal.getId())
                             .ojsId(ojsId)
                             .lastModifier(lastModifier)
                             .title(title)
@@ -567,32 +601,13 @@ public class ArticleService {
                     Optional<Article> articleCheck = articleRepository.findByDoi(doi);
 
                     if(articleCheck.isEmpty()){
-                        Article save = articleRepository.save(articleBuild);
-
-                        this.kafkaSend(save);
+                       this.createArticle(articleBuild);
 
                     }else {
                         if(!Objects.equals(articleCheck.get().getLastModifier(), lastModifier)){
 
-                            articleCheck.get().setJournal(journal);
-                            articleCheck.get().setOjsId(ojsId);
-                            articleCheck.get().setTitle(title);
-                            articleCheck.get().setPages(pages);
-                            articleCheck.get().setPublishYear(publishYear);
-                            articleCheck.get().setPublishDate(publishDate);
-                            articleCheck.get().setLastModifier(lastModifier);
-                            articleCheck.get().setDoi(doi);
-                            articleCheck.get().setVolume(volume);
-                            articleCheck.get().setIssue(issue);
-                            articleCheck.get().setCopyright(copyright);
-                            articleCheck.get().setAbstractText(abstractText);
-                            articleCheck.get().setArticlePdf(articlePdf);
-                            articleCheck.get().setKeywords(keywordList);
-                            articleCheck.get().setPublishStatus(publishStatus);
+                            this.updateArticle(articleCheck.get().getId(), articleBuild);
 
-                            Article save = articleRepository.save(articleCheck.get());
-
-                            this.kafkaSend(save);
                         }
                     }
                 }
@@ -640,7 +655,7 @@ public class ArticleService {
                 String lastModifier = recordType.getHeader().getDatestamp();
 
 
-                List<HashMap<String, String>> keywordList = new ArrayList<>();
+                List<Keyword> keywordList = new ArrayList<>();
 
                 String title = null;
 
@@ -730,7 +745,7 @@ public class ArticleService {
                         }
 
                         /**
-                         * Get Keyword
+                         * Get KeywordEvent
                          * ID 653
                          * Label a
                          * */
@@ -743,10 +758,10 @@ public class ArticleService {
                                 String[] keywords = keyword.split(";");
 
                                 for (String value : keywords) {
-                                    HashMap<String, String> hasKey = new HashMap<>();
-                                    hasKey.put("name", value);
+                                    Keyword keyword1 = Keyword.builder().name(value).build();
 
-                                    keywordList.add(hasKey);
+
+                                    keywordList.add(keyword1);
                                 }
                             }
                         }
@@ -807,8 +822,8 @@ public class ArticleService {
                     publishStatus = "early access";
                 }
 
-                Article articleBuild = Article.builder()
-                        .journal(journal)
+                ArticleRequest articleBuild = ArticleRequest.builder()
+                        .journalId(journal.getId())
                         .ojsId(ojsId)
                         .lastModifier(lastModifier)
                         .title(title)
@@ -826,27 +841,12 @@ public class ArticleService {
                 Optional<Article> articleCheck = articleRepository.findByTitleAndOjsId(title, ojsId);
 
                 if(articleCheck.isEmpty()){
-                    Article save = articleRepository.save(articleBuild);
+                  this.createArticle(articleBuild);
 
-                    this.kafkaSend(save);
                 }else {
                     if(!Objects.equals(articleCheck.get().getLastModifier(), lastModifier)){
 
-                        articleCheck.get().setJournal(journal);
-                        articleCheck.get().setOjsId(ojsId);
-                        articleCheck.get().setTitle(title);
-                        articleCheck.get().setPublishYear(publishYear);
-                        articleCheck.get().setPublishDate(publishDate);
-                        articleCheck.get().setLastModifier(lastModifier);
-                        articleCheck.get().setVolume(volume);
-                        articleCheck.get().setIssue(issue);
-                        articleCheck.get().setAbstractText(abstractText);
-                        articleCheck.get().setKeywords(keywordList);
-                        articleCheck.get().setDoi(doi);
-                        articleCheck.get().setPublishStatus(publishStatus);
-                        Article save = articleRepository.save(articleCheck.get());
-
-                        this.kafkaSend(save);
+                        this.updateArticle(articleCheck.get().getId(), articleBuild);
                     }
                 }
             }
@@ -876,6 +876,17 @@ public class ArticleService {
                    .build());
         }
 
+        Set<KeywordEvent> keywordEvents = new HashSet<>();
+
+        if(!article.getKeywords().isEmpty()){
+            for(Keyword keyword : article.getKeywords()){
+                KeywordEvent keywordEvent1 = KeywordEvent.builder()
+                        .name(keyword.getName()).build();
+
+                keywordEvents.add(keywordEvent1);
+            }
+        }
+
         kafkaTemplate.send("article", ArticleEvent.builder()
                 .id(article.getId())
                         .journal(journal)
@@ -890,7 +901,123 @@ public class ArticleService {
                         .publishStatus(article.getPublishStatus())
                         .abstractText(article.getAbstractText())
                         .authorEvents(authorEvents)
-                        .keywords(article.getKeywords())
+                        .keywordEvents(keywordEvents)
+                        .figures(article.getFigures())
+                        .citationByScopus(article.getCitationByScopus())
+                        .viewsCount(article.getViewsCount())
+                        .downloadCount(article.getDownloadCount())
+                        .citationByCrossRef(article.getCitationByCrossRef())
                 .build());
+    }
+
+
+    public void citationScopus(String doi) throws CustomException{
+        try {
+            CitationScopus citationScopus = webClientWithOutBuilder.build().get()
+                    .uri("https://api.elsevier.com/content/search/scopus?query=DOI(" + doi + ")")
+                    .header("X-ELS-APIKey", apiKey)
+                    .retrieve()
+                    .bodyToMono(CitationScopus.class)
+                    .block();
+
+            Optional<Article> article = articleRepository.findByDoi(doi);
+
+            if(article.isEmpty()){
+                throw new CustomException("Article with doi " + doi + " not found", HttpStatus.NOT_FOUND);
+            }
+
+            if(citationScopus == null){
+                article.get().setCitationByScopus(0);
+
+                articleRepository.save(article.get());
+
+                throw new CustomException("Article with doi " + doi + " Citation not found", HttpStatus.NOT_FOUND);
+            }
+
+            SearchResults searchResults = citationScopus.getSearchResults();
+
+            if(searchResults.getEntry().isEmpty()){
+                throw new CustomException("Article with doi " + doi + " Citation not found", HttpStatus.NOT_FOUND);
+            }
+
+            article.get().setCitationByScopus(Integer.valueOf(searchResults.getEntry().get(0).getCitedbyCount()));
+
+            Article save = articleRepository.save(article.get());
+
+            kafkaTemplate.send("articleScopusCitation", ArticleEvent.builder()
+                    .id(save.getId())
+                    .citationByScopus(save.getCitationByScopus())
+                    .build());
+
+
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    public void citationCrossRef(String doi) throws CustomException{
+        try {
+            CitationCrossRef citationCrossRef = webClientWithOutBuilder.build().get()
+                    .uri("https://api.crossref.org/works/"+doi)
+                    .retrieve()
+                    .bodyToMono(CitationCrossRef.class)
+                    .block();
+
+            Optional<Article> article = articleRepository.findByDoi(doi);
+
+            if(article.isEmpty()){
+                throw new CustomException("Article with doi " + doi + " not found", HttpStatus.NOT_FOUND);
+            }
+
+            if(citationCrossRef == null){
+                article.get().setCitationByCrossRef(0);
+
+                articleRepository.save(article.get());
+
+                throw new CustomException("Article with doi " + doi + " Citation not found", HttpStatus.NOT_FOUND);
+            }
+
+
+            article.get().setCitationByCrossRef(citationCrossRef.getMessage().getReferencesCount());
+
+
+
+            Article save = articleRepository.save(article.get());
+
+            kafkaTemplate.send("articleCrossRefCitation", ArticleEvent.builder()
+                    .id(save.getId())
+                    .citationByCrossRef(save.getCitationByCrossRef())
+                    .build());
+
+
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Featured articles by citation
+     * */
+    public Iterable<Article> featuredArticles()throws CustomException{
+        try {
+            return articleRepository.findTop5ByOrderByCitationByScopusDescCitationByCrossRefDesc();
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    public void setCounter(SetCounter setCounter) throws CustomException {
+        try{
+            Article article = this.getArticle(setCounter.getArticleId());
+
+            article.setViewsCount(setCounter.getViewsCount());
+            article.setDownloadCount(setCounter.getDownloadCount());
+
+           Article save = articleRepository.save(article);
+
+           this.kafkaSend(save);
+        }catch (Exception e) {
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
     }
 }

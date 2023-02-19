@@ -1,5 +1,6 @@
 package com.ipmugo.userservice.security;
 
+import com.ipmugo.userservice.model.UserRole;
 import com.ipmugo.userservice.service.UserService;
 import com.ipmugo.userservice.utils.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests().antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/management/**").hasAuthority("Administrator")
+                .antMatchers("/api/management/**").hasAnyAuthority(UserRole.Administrator.name(), UserRole.JournalManager.name())
                 .anyRequest().authenticated();
 
         http.authenticationProvider(authenticationProvider());

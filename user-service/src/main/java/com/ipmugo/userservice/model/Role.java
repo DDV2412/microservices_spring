@@ -1,26 +1,35 @@
 package com.ipmugo.userservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
-@Document(value = "roles")
-@Data
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.*;
+
+
+import javax.persistence.*;
+import java.util.Set;
+import java.util.UUID;
+
+
+@Entity
+@Table(name = "roles")
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Role {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
-    @Field
-    @Indexed(unique = true)
-    private RoleEnum name;
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @JoinTable(name = "userRole", joinColumns = @JoinColumn(name = "roleId"), inverseJoinColumns = @JoinColumn(name = "userId"))
+    @JsonBackReference
+    private Set<User> users;
+
+
+    @Enumerated(EnumType.STRING)
+    private UserRole name;
 }
 

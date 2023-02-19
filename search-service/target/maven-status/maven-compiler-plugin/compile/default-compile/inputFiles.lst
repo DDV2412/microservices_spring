@@ -1,1 +1,14 @@
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\service\ArticleService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\JournalEvent.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\controller\ArticleController.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\utils\CustomException.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\AuthorEvent.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\model\Journal.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\model\Author.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\config\ElasticsearchConfig.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\KeywordEvent.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\model\Article.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\model\Keyword.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\repository\ArticleRepository.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\ArticleEvent.java
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\SearchSearchApplication.java

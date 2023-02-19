@@ -1,4 +1,3 @@
-F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\model\RoleEnum.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\model\AuthorScholarProfile.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\controller\AuthController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\PasswordRequest.java
@@ -9,6 +8,7 @@ F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmug
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\security\WebSecurityConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\PasswordEncode.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\service\OneTimePasswordService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\event\AuthorAssignEvent.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\DataSeeders.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\repository\RoleRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\CustomException.java
@@ -19,12 +19,16 @@ F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmug
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\repository\OneTimePasswordRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\UserServiceApplication.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\UserResponse.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\config\WebClientConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\OtpRequest.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\repository\UserRepository.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\MailRequest.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\model\User.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\AuthTokenFilter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\RegisterRequest.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\utils\PasswordGenerator.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\ProfileUpdate.java
+F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\model\UserRole.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\LoginRequest.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\controller\UserController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\user-service\src\main\java\com\ipmugo\userservice\dto\ResponseData.java

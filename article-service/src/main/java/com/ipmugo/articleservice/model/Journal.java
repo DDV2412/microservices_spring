@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.UUID;
+
 
 @Data
 @AllArgsConstructor
@@ -18,7 +20,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class Journal {
 
     @Id
-    private String id;
+    private UUID id;
 
     @Field
     private String name;
@@ -39,5 +41,8 @@ public class Journal {
     @Field
     @Indexed(unique = true, name="journalSite")
     private String journalSite;
+
+    @Field
+    private boolean scopusIndex;
 
 }

@@ -72,23 +72,24 @@ public class Article {
     private String articlePdf;
 
     @Field
-    private List<HashMap<String, String>> keywords;
-
-    @CreatedDate
-    private LocalDateTime updatedAt;
+    private List<Keyword> keywords;
 
     @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @DBRef
     private Set<Author> authors;
 
-    @DBRef
-    private CitationScopus citationByScopus;
+    private int citationByScopus;
 
-    @DBRef
-    private CitationCrossRef citationByCrossRef;
+    private int citationByCrossRef;
 
-    @DBRef
-    private Set<Figure> figures;
+    private List<String> figures;
+
+    private int viewsCount;
+
+    private int downloadCount;
 }

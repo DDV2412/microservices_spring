@@ -11,6 +11,10 @@ import com.ipmugo.articleservice.model.Article;
 import com.ipmugo.articleservice.service.ArticleService;
 import com.ipmugo.articleservice.utils.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -18,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/article")
@@ -35,7 +40,6 @@ public class ArticleController {
      * */
     @PostMapping
     @CircuitBreaker(name = "journal")
-    @TimeLimiter(name = "journal")
     @Retry(name = "journal")
     public ResponseEntity<ResponseData<Article>> createArticle(@Valid @RequestBody ArticleRequest articleRequest,
                                                                        Errors errors) {
@@ -69,7 +73,6 @@ public class ArticleController {
      * */
     @PutMapping("/{id}")
     @CircuitBreaker(name = "journal")
-    @TimeLimiter(name = "journal")
     @Retry(name = "journal")
     public ResponseEntity<ResponseData<Article>> updateArticle(@PathVariable("id") String id, @Valid @RequestBody ArticleRequest articleRequest,
                                                                Errors errors) {
@@ -102,12 +105,14 @@ public class ArticleController {
      * Get List Article
      * */
     @GetMapping
-    public ResponseEntity<ResponseData<List<Article>>> getAllArticles() {
-        ResponseData<List<Article>> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<Page<Article>>> getAllArticles(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search) {
+        ResponseData<Page<Article>> responseData = new ResponseData<>();
 
         try{
+
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size), Sort.by("publishDate").descending());
             responseData.setStatus(true);
-            responseData.setData(articleService.getAllArticle());
+            responseData.setData(articleService.getAllArticle(pageable, search));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
@@ -121,7 +126,7 @@ public class ArticleController {
     /**
      * Get Article By ID
      * */
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ResponseData<Article>> getArticle(@PathVariable("id") String id) {
         ResponseData<Article> responseData = new ResponseData<>();
         try{
@@ -139,7 +144,7 @@ public class ArticleController {
     /**
      * Delete Article By ID
      * */
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseData<String>> deleteArticle(@PathVariable("id") String id) {
 
         ResponseData<String> responseData = new ResponseData<>();
@@ -148,7 +153,7 @@ public class ArticleController {
 
             responseData.setStatus(true);
             responseData.setData(null);
-            responseData.getMessages().add("Journal deleted successfully");
+            responseData.getMessages().add("Article deleted successfully");
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
@@ -162,7 +167,7 @@ public class ArticleController {
      * Delete Journal By ID
      * */
     @DeleteMapping("/delete/journal/{id}")
-    public ResponseEntity<ResponseData<String>> deleteJournal(@PathVariable("id") String id) {
+    public ResponseEntity<ResponseData<String>> deleteJournal(@PathVariable("id") UUID id) {
 
         ResponseData<String> responseData = new ResponseData<>();
         try{
@@ -200,9 +205,8 @@ public class ArticleController {
 
     @GetMapping("/oai-pmh/dc/{id}/{start}/{until}")
     @CircuitBreaker(name = "journal")
-    @TimeLimiter(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("id") String id, @PathVariable("start") String start, @PathVariable("until") String until){
+    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("id") UUID id, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
             articleService.getOaiPmh(id, "oai_dc", start, until);
@@ -219,9 +223,8 @@ public class ArticleController {
 
     @GetMapping("/oai-pmh/marc/{id}/{start}/{until}")
     @CircuitBreaker(name = "journal")
-    @TimeLimiter(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("id") String id, @PathVariable("start") String start, @PathVariable("until") String until){
+    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("id") UUID id, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
             articleService.getOaiPmh(id, "oai_marc", start, until);
@@ -232,6 +235,69 @@ public class ArticleController {
         }catch (CustomException e){
             responseData.setStatus(true);
             responseData.getMessages().add(e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    @GetMapping("/scopus/{identify}/{doi}")
+    public ResponseEntity<ResponseData<String>> citationScopus(@PathVariable("identify") String identify,@PathVariable("doi") String doi) {
+
+        ResponseData<String> responseData = new ResponseData<>();
+        try{
+            String fullDoi = identify + "/" + doi;
+
+            articleService.citationScopus(fullDoi);
+
+            responseData.setStatus(true);
+            responseData.setData(null);
+            responseData.getMessages().add("Citation by scopus synchronized successfully");
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    @GetMapping("/cross-ref/{identify}/{doi}")
+    public ResponseEntity<ResponseData<String>> citationCrossRef(@PathVariable("identify") String identify, @PathVariable("doi") String doi) {
+
+        ResponseData<String> responseData = new ResponseData<>();
+        try{
+
+            String fullDoi = identify + "/" + doi;
+
+            articleService.citationCrossRef(fullDoi);
+
+            responseData.setStatus(true);
+            responseData.setData(null);
+            responseData.getMessages().add("Citation by crossRef synchronized successfully");
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    /**
+     * Get List Article
+     * */
+    @GetMapping("/featured-articles")
+    public ResponseEntity<ResponseData<Iterable<Article>>> featuredArticles() {
+        ResponseData<Iterable<Article>> responseData = new ResponseData<>();
+
+        try{
+            responseData.setStatus(true);
+            responseData.setData(articleService.featuredArticles());
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+
             return ResponseEntity.status(e.getStatusCode()).body(responseData);
         }
     }

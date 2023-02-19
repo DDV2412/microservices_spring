@@ -1,9 +1,6 @@
 package com.ipmugo.articleservice.dto;
 
-import com.ipmugo.articleservice.model.Author;
-import com.ipmugo.articleservice.model.CitationCrossRef;
-import com.ipmugo.articleservice.model.CitationScopus;
-import com.ipmugo.articleservice.model.Journal;
+import com.ipmugo.articleservice.model.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,10 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -24,7 +21,7 @@ import java.util.Set;
 @Builder
 public class ArticleRequest {
     @NotBlank(message = "Journal Id must not be blank")
-    private String journalId;
+    private UUID journalId;
 
     @NotBlank(message = "Abstract must not be blank")
     private String ojsId;
@@ -76,12 +73,16 @@ public class ArticleRequest {
     private String articlePdf;
 
     @NotEmpty(message = "Keywords must not be empty")
-    private List<HashMap<String, String>> keywords;
+    private List<Keyword> keywords;
 
     @NotEmpty(message = "Authors must not be empty")
     private Set<Author> authors;
 
-    private CitationScopus citationByScopus;
+    private int citationByScopus;
 
-    private CitationCrossRef citationByCrossRef;
+    private int citationByCrossRef;
+
+
+
+    private List<String> figures;
 }

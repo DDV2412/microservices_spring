@@ -1,31 +1,38 @@
 package com.ipmugo.journalservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.*;
 
-@Document(value = "citationReport")
+import javax.persistence.*;
+import java.util.UUID;
+
+@Table(name = "citationReport")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Data
+@Entity
+@Getter
+@Setter
 public class CitationReport {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private UUID id;
 
+    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "journalId", nullable = false)
+    @JsonBackReference
+    private Journal journal;
+    @Column
     private Double sjr;
-
+    @Column
     private Double snip;
-
+    @Column
     private Double citeScoreCurrent;
-
+    @Column
     private Double citeScoreTracker;
-
+    @Column
     private String currentYear;
-
+    @Column
     private String trackerYear;
 }

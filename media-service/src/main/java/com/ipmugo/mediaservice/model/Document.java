@@ -1,40 +1,44 @@
 package com.ipmugo.mediaservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 
-@org.springframework.data.mongodb.core.mapping.Document(value = "document")
+import javax.persistence.*;
+import java.sql.Timestamp;
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Data
-public class Document {  @Id
-private String id;
+@Entity
+@Getter
+@Setter
+@Table(name = "document")
+public class Document {
 
-    @Field
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+
+    @Column(unique = true)
     private String fileName;
 
-    @Field
+    @Column
     private Long fileSize;
 
-    @Field
+    @Column
     private String fileType;
 
 
-    @Field
+    @Column
     private byte[] fileByte;
 
-    @CreatedDate
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private Timestamp updatedAt;
 
-    @LastModifiedDate
-    private LocalDateTime createdAt;
+    @UpdateTimestamp
+    private Timestamp createdAt;
 }

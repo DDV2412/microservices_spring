@@ -3,6 +3,7 @@ package com.ipmugo.mediaservice.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.ipmugo.mediaservice.model.Document;
 import com.ipmugo.mediaservice.model.Image;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -150,7 +153,7 @@ public class MediaService {
     /**
      * Get Image By Id
      * */
-    public Image getImage(String id) throws CustomException {
+    public Image getImage(UUID id) throws CustomException {
        try{
            Optional<Image> image = imageRepository.findById(id);
 
@@ -168,7 +171,7 @@ public class MediaService {
     /**
      * Get Document By Id
      * */
-    public Document getDocument(String id) throws CustomException {
+    public Document getDocument(UUID id) throws CustomException {
         try{
             Optional<Document> document = documentRepository.findById(id);
 
@@ -186,9 +189,9 @@ public class MediaService {
     /**
      * Get List Images
      * */
-    public List<Image> getAllImage() throws CustomException {
+    public Page<Image> getAllImage(Pageable pageable) throws CustomException {
         try{
-            return imageRepository.findAll();
+            return imageRepository.findAll(pageable);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -197,9 +200,9 @@ public class MediaService {
     /**
      * Get List Documents
      * */
-    public List<Document> getAllDocuments() throws CustomException {
+    public Page<Document> getAllDocuments(Pageable pageable) throws CustomException {
         try{
-            return documentRepository.findAll();
+            return documentRepository.findAll(pageable);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -208,11 +211,11 @@ public class MediaService {
     /**
      * Delete Image By FileName
      * */
-    public void deleteImage(String id) throws CustomException {
+    public void deleteImage(UUID id) throws CustomException {
         try{
-            Image image = this.getImage(id);
+            this.getImage(id);
 
-            imageRepository.deleteById(image.getId());
+            imageRepository.deleteById(id);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -222,11 +225,10 @@ public class MediaService {
     /**
      * Delete Document By FileName
      * */
-    public void deleteDocument(String id) throws CustomException {
+    public void deleteDocument(UUID id) throws CustomException {
         try{
-            Document document = this.getDocument(id);
-
-            imageRepository.deleteById(document.getId());
+            this.getDocument(id);
+            documentRepository.deleteById(id);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }

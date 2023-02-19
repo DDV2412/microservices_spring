@@ -1,8 +1,8 @@
 package com.ipmugo.userservice.utils;
 
 import com.ipmugo.userservice.model.Role;
-import com.ipmugo.userservice.model.RoleEnum;
 import com.ipmugo.userservice.model.User;
+import com.ipmugo.userservice.model.UserRole;
 import com.ipmugo.userservice.repository.RoleRepository;
 import com.ipmugo.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,19 +34,16 @@ public class DataSeeders  implements ApplicationListener<ContextRefreshedEvent> 
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (roleRepository.count() < 1) {
             List<Role> roleList = Arrays.asList(
-                    Role.builder().name(RoleEnum.Administrator).build(),
-                    Role.builder().name(RoleEnum.Reader).build()
+                    Role.builder().name(UserRole.Administrator).build(),
+                    Role.builder().name(UserRole.Reader).build()
             );
 
             roleRepository.saveAll(roleList);
         }
 
-        Set<Role> roles = new HashSet<>();
-
-        Role assignRole = roleRepository.findByName(RoleEnum.Administrator)
+        Role assignRole = roleRepository.findByName(UserRole.Administrator)
                 .orElseThrow(() -> new CustomException("Role is not found.", HttpStatus.NOT_FOUND));
 
-        roles.add(assignRole);
 
         if (userRepository.count() < 1) {
             User admin = User.builder()
@@ -57,10 +54,14 @@ public class DataSeeders  implements ApplicationListener<ContextRefreshedEvent> 
                     .username("Dhyan Putra")
                     .isEnabled(true)
                     .isVerify(true)
-                    .roles(roles)
                     .build();
 
-            userRepository.save(admin);
+
+            User save = userRepository.save(admin);
+
+            assignRole.getUsers().add(save);
+
+            roleRepository.save(assignRole);
         }
     }
 }

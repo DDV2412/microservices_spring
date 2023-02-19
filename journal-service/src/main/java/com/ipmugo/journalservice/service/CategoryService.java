@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class CategoryService {
     /**
      * Get Category by Name
      * */
-    public Category getCategory(String id) throws CustomException{
+    public Category getCategory(UUID id) throws CustomException{
         try{
             Optional<Category> category = categoryRepository.findById(id);
 
@@ -61,7 +62,7 @@ public class CategoryService {
     /**
      * Update Category
      * */
-    public Category updateCategory(String id, Category category) throws CustomException {
+    public Category updateCategory(UUID id, Category category) throws CustomException {
         try{
             Category category1 = this.getCategory(id);
 
@@ -87,11 +88,11 @@ public class CategoryService {
     /**
      * Delete Category by Name
      * */
-    public void deleteCategory(String id) throws CustomException{
+    public void deleteCategory(UUID id) throws CustomException{
         try{
-            Category category = this.getCategory(id);
+            this.getCategory(id);
 
-            categoryRepository.deleteById(category.getId());
+            categoryRepository.deleteById(id);
 
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);

@@ -1,7 +1,8 @@
-userDb
-mediaDb
-journalDb
-articleDb
+postgres-media
+postgres-journal
+service-database
+postgres-author
+postgres-user
 prometheus
 realms
 .idea

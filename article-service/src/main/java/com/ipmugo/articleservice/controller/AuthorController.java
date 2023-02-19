@@ -6,6 +6,9 @@ import com.ipmugo.articleservice.service.AuthorService;
 import com.ipmugo.articleservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -13,6 +16,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/author")
@@ -23,10 +27,10 @@ public class AuthorController {
     private AuthorService authorService;
 
     /**
-     * Update AuthorEvent
+     * Update Author
      * */
-    @PutMapping("/{firstName}/{lastName}")
-    public ResponseEntity<ResponseData<Author>> updateAuthor(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName, @Valid @RequestBody Author author,
+    @PutMapping("/id")
+    public ResponseEntity<ResponseData<Author>> updateAuthor(@PathVariable("id") String id, @Valid @RequestBody Author author,
                                                                Errors errors) {
         ResponseData<Author> responseData = new ResponseData<>();
 
@@ -42,10 +46,10 @@ public class AuthorController {
 
         try{
 
-            Author author1 = authorService.updateAuthor(firstName, lastName, author);
+            Author author1 = authorService.updateAuthor(id, author);
 
             if(author1 == null){
-                responseData.getMessages().add("AuthorEvent with firstname "+firstName+" not found");
+                responseData.getMessages().add("Author with id "+id+" not found");
                 responseData.setData(null);
                 responseData.setStatus(false);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseData);
@@ -63,23 +67,16 @@ public class AuthorController {
     }
 
     /**
-     * Find AuthorEvent by Firstname and LastName
+     * Find Author by Firstname and LastName
      * */
     @GetMapping("/{firstName}/{lastName}")
-    public ResponseEntity<ResponseData<Author>> getAuthor(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) {
-        ResponseData<Author> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<Iterable<Author>>> getAuthor(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName, @RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size) {
+        ResponseData<Iterable<Author>> responseData = new ResponseData<>();
 
         try{
 
-            Author author1 = authorService.getAuthor(firstName, lastName);
-
-            if(author1 == null){
-                responseData.getMessages().add("AuthorEvent with firstname "+firstName+" not found");
-                responseData.setData(null);
-                responseData.setStatus(false);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseData);
-            }
-            responseData.setData(author1);
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size));
+            responseData.setData(authorService.getAuthor(pageable,firstName, lastName));
             responseData.setStatus(true);
             return ResponseEntity.ok(responseData);
 
@@ -92,9 +89,9 @@ public class AuthorController {
     }
 
     /**
-     * Delete AuthorEvent By ID
+     * Delete Author By ID
      * */
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseData<String>> deleteAuthor(@PathVariable("id") String id) {
 
         ResponseData<String> responseData = new ResponseData<>();
@@ -103,7 +100,7 @@ public class AuthorController {
 
             responseData.setStatus(true);
             responseData.setData(null);
-            responseData.getMessages().add("AuthorEvent deleted successfully");
+            responseData.getMessages().add("Author deleted successfully");
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){

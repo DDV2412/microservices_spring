@@ -1,7 +1,9 @@
 package com.ipmugo.journalservice.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.ipmugo.journalservice.event.JournalEvent;
 import com.ipmugo.journalservice.model.Category;
@@ -9,6 +11,8 @@ import com.ipmugo.journalservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -21,7 +25,6 @@ import com.ipmugo.journalservice.repository.JournalRepository;
 @RequiredArgsConstructor
 @Slf4j
 public class JournalService {
-
 
     @Autowired
     private JournalRepository journalRepository;
@@ -79,9 +82,12 @@ public class JournalService {
     /**
      * Get List Journal
      * */
-    public List<Journal> getAllJournals() throws CustomException {
+    public Page<Journal> getAllJournals(Pageable pageable, String searchTerm) throws CustomException {
         try{
-            return journalRepository.findAll();
+            if (searchTerm == null || searchTerm.isEmpty()) {
+                return journalRepository.findAll(pageable);
+            }
+            return journalRepository.searchTerm(pageable, searchTerm);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -90,7 +96,7 @@ public class JournalService {
     /**
      * Update Journal
      * */
-    public Journal updateJournal(String id, JournalRequest journalRequest) throws CustomException {
+    public Journal updateJournal(UUID id, JournalRequest journalRequest) throws CustomException {
         try{
             Journal journal = this.getJournal(id);
 
@@ -130,7 +136,7 @@ public class JournalService {
     /**
      * Get Journal By ID
      * */
-    public Journal getJournal(String id) throws CustomException {
+    public Journal getJournal(UUID id) throws CustomException {
         try{
             Optional<Journal> journal = journalRepository.findById(id);
             if (journal.isEmpty()) {
@@ -145,7 +151,7 @@ public class JournalService {
     /**
      * Delete Journal By ID
      * */
-    public void deleteJournal(String id) throws CustomException {
+    public void deleteJournal(UUID id) throws CustomException {
         try{
 
             this.getJournal(id);
@@ -160,7 +166,7 @@ public class JournalService {
     /**
      * Assign All Categories to Journal By ID
      * */
-    public Journal assignCategory(String id, List<Category> category) throws CustomException{
+    public Journal assignCategory(UUID id, List<Category> category) throws CustomException{
         try{
             Journal journal = this.getJournal(id);
 
