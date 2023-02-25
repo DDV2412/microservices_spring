@@ -171,4 +171,15 @@ public class UserService {
         }
     }
 
+    /**
+     * Featured Authors
+     * */
+    public List<User> featuredAuthor() throws CustomException{
+        try{
+            return userRepository.findTop4ByOrderByHIndexAndArticleValuesDescWithLimit();
+        }catch(Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
 }

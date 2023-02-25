@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -13,20 +14,29 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(indexName = "author")
+@Document(indexName = Author.INDEX)
 public class Author {
 
-    @Field(type = FieldType.Keyword)
-    private String id;
+    public static final String INDEX = "author";
 
-    @Field(type = FieldType.Keyword)
+    @Id
+    private String id;
+    @Field(type = FieldType.Text, analyzer = "english")
     private String firstName;
 
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.Text, analyzer = "english")
     private  String lastName;
+
+    @Field(type = FieldType.Keyword)
+    private String email;
 
     @Field(type = FieldType.Text, analyzer = "english")
     private String affiliation;
 
+    @Field(type = FieldType.Text, analyzer = "english")
+    private String biography;
+
+    @Field(type = FieldType.Keyword)
+    private String orcid;
 
 }

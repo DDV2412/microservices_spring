@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,7 +21,11 @@ public class JournalEvent {
 
     private String e_issn;
 
+    private String abbreviation;
+
     private String publisher;
 
+    private String journalSite;
 
+    private boolean scopusIndex;
 }

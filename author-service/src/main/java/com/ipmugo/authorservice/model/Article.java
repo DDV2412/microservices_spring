@@ -53,8 +53,8 @@ public class Article {
     @Column
     private int citationByCrossRef;
     @Column
-    private int viewsCount;
+    private long viewsCount;
     @Column
-    private  int downloadCount;
+    private  long downloadCount;
 
 }

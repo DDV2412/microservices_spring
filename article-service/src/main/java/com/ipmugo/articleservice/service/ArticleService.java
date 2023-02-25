@@ -2,9 +2,7 @@ package com.ipmugo.articleservice.service;
 
 import com.ipmugo.articleservice.dto.*;
 import com.ipmugo.articleservice.event.*;
-import com.ipmugo.articleservice.model.Author;
-import com.ipmugo.articleservice.model.Journal;
-import com.ipmugo.articleservice.model.Keyword;
+import com.ipmugo.articleservice.model.*;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_dc.OaiDcType;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_marc.OaiMarc;
 import com.ipmugo.articleservice.schema.openarchives.oai.oai_marc.Varfield;
@@ -12,21 +10,29 @@ import com.ipmugo.articleservice.schema.openarchives.oai.pmh.ListRecordsType;
 import com.ipmugo.articleservice.schema.openarchives.oai.pmh.OAIPMHtype;
 import com.ipmugo.articleservice.schema.openarchives.oai.pmh.RecordType;
 import com.ipmugo.articleservice.schema.purl.dc.elements.ElementType;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.ipmugo.articleservice.model.Article;
 import com.ipmugo.articleservice.repository.ArticleRepository;
 import com.ipmugo.articleservice.utils.CustomException;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.w3c.dom.Element;
+import reactor.netty.http.client.HttpClient;
 
+import javax.net.ssl.SSLException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
@@ -58,11 +64,13 @@ public class ArticleService {
     @Value("${scopus.api.key.secret}")
     private String apiKey;
 
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     @Autowired
     private KafkaTemplate<String, ArticleEvent> kafkaTemplate;
 
-    @Autowired
-    private KafkaTemplate<String, ArticleAssignEvent> articleAssignEventKafkaTemplate;
     /**
      * Save Article
      * */
@@ -124,9 +132,76 @@ public class ArticleService {
                     .figures(articleRequest.getFigures())
                     .build();
 
+
             Article save = articleRepository.save(article);
 
-            this.kafkaSend(save);
+            /**
+             * Build Article For Kafka template
+             * */
+
+            JournalEvent journalEvent = JournalEvent.builder()
+                    .id(save.getJournal().getId())
+                    .name(save.getJournal().getName())
+                    .issn(save.getJournal().getIssn())
+                    .e_issn(save.getJournal().getE_issn())
+                    .publisher(save.getJournal().getPublisher())
+                    .abbreviation(save.getJournal().getAbbreviation())
+                    .journalSite(save.getJournal().getJournalSite())
+                    .scopusIndex(save.getJournal().isScopusIndex())
+                    .build();
+
+
+            List<KeywordEvent> keywordEvents = new ArrayList<>();
+
+            if(save.getKeywords().size() > 0){
+                for(Keyword keyword: save.getKeywords()){
+                    KeywordEvent keywordEvent = KeywordEvent.builder()
+                            .name(keyword.getName()).build();
+
+                    keywordEvents.add(keywordEvent);
+                }
+            }
+
+
+            HashSet<AuthorEvent> authorEvents = new HashSet<>();
+            if(save.getAuthors().size() > 0){
+                for(Author author: save.getAuthors()){
+                    AuthorEvent authorEvent = AuthorEvent.builder()
+                            .id(author.getId())
+                            .firstName(author.getFirstName())
+                            .lastName(author.getLastName())
+                            .email(author.getEmail())
+                            .affiliation(author.getAffiliation())
+                            .orcid(author.getOrcid())
+                    .build();
+
+                    authorEvents.add(authorEvent);
+                }
+            }
+
+            kafkaTemplate.send("article", ArticleEvent.builder()
+                            .id(save.getId())
+                            .journal(journalEvent)
+                            .ojsId(save.getOjsId())
+                            .title(save.getTitle())
+                            .pages(save.getPages())
+                            .publishYear(save.getPublishYear())
+                            .lastModifier(save.getLastModifier())
+                            .publishDate(save.getPublishDate())
+                            .doi(save.getDoi())
+                            .volume(save.getVolume())
+                            .issue(save.getIssue())
+                            .publishStatus(save.getPublishStatus())
+                            .abstractText(save.getAbstractText())
+                    .articlePdf(save.getArticlePdf())
+                    .keywords(keywordEvents)
+                    .authors(authorEvents)
+                    .citationByScopus(save.getCitationByScopus())
+                    .citationByCrossRef(save.getCitationByCrossRef())
+                    .figures(save.getFigures())
+                    .viewsCount(save.getViewsCount())
+                    .downloadCount(save.getDownloadCount())
+                    .build());
 
             return save;
         }catch (Exception e) {
@@ -194,19 +269,70 @@ public class ArticleService {
 
             Article save = articleRepository.save(article);
 
-            this.kafkaSend(save);
+            /**
+             * Build Article For Kafka template
+             * */
 
-            articleAssignEventKafkaTemplate.send("articleAssign", ArticleAssignEvent.builder()
-                            .id(save.getId())
-                            .journal(save.getJournal().getName())
-                            .title(save.getTitle())
+            JournalEvent journalEvent = JournalEvent.builder()
+                    .id(save.getJournal().getId())
+                    .name(save.getJournal().getName())
+                    .issn(save.getJournal().getIssn())
+                    .e_issn(save.getJournal().getE_issn())
+                    .publisher(save.getJournal().getPublisher())
+                    .abbreviation(save.getJournal().getAbbreviation())
+                    .journalSite(save.getJournal().getJournalSite())
+                    .scopusIndex(save.getJournal().isScopusIndex())
+                    .build();
+
+
+            List<KeywordEvent> keywordEvents = new ArrayList<>();
+
+            if(save.getKeywords().size() > 0){
+                for(Keyword keyword: save.getKeywords()){
+                    KeywordEvent keywordEvent = KeywordEvent.builder()
+                            .name(keyword.getName()).build();
+
+                    keywordEvents.add(keywordEvent);
+                }
+            }
+
+
+            HashSet<AuthorEvent> authorEvents = new HashSet<>();
+            if(save.getAuthors().size() > 0){
+                for(Author author: save.getAuthors()){
+                    AuthorEvent authorEvent = AuthorEvent.builder()
+                            .id(author.getId())
+                            .firstName(author.getFirstName())
+                            .lastName(author.getLastName())
+                            .email(author.getEmail())
+                            .affiliation(author.getAffiliation())
+                            .orcid(author.getOrcid())
+                            .build();
+
+                    authorEvents.add(authorEvent);
+                }
+            }
+
+            kafkaTemplate.send("article", ArticleEvent.builder()
+                    .id(save.getId())
+                    .journal(journalEvent)
+                    .ojsId(save.getOjsId())
+                    .title(save.getTitle())
+                    .pages(save.getPages())
+                    .publishYear(save.getPublishYear())
+                    .lastModifier(save.getLastModifier())
                     .publishDate(save.getPublishDate())
+                    .doi(save.getDoi())
                     .volume(save.getVolume())
                     .issue(save.getIssue())
-                    .doi(save.getDoi())
+                    .publishStatus(save.getPublishStatus())
+                    .abstractText(save.getAbstractText())
                     .articlePdf(save.getArticlePdf())
+                    .keywords(keywordEvents)
+                    .authors(authorEvents)
                     .citationByScopus(save.getCitationByScopus())
                     .citationByCrossRef(save.getCitationByCrossRef())
+                    .figures(save.getFigures())
                     .viewsCount(save.getViewsCount())
                     .downloadCount(save.getDownloadCount())
                     .build());
@@ -222,7 +348,7 @@ public class ArticleService {
      * */
     public Page<Article> getAllArticle(Pageable pageable, String searchTerm)throws CustomException{
         try {
-            if(searchTerm == null || searchTerm.isEmpty()){
+            if(searchTerm == null || StringUtils.isBlank(searchTerm)){
                 return articleRepository.findAll(pageable);
             }
 
@@ -312,6 +438,21 @@ public class ArticleService {
 
            WebClient webClient = WebClient.builder()
                    .baseUrl(journal.getJournalSite() + "/oai")
+                   .clientConnector(
+                           new ReactorClientHttpConnector(HttpClient.create().secure(
+                                   sslContextSpec -> {
+                                       try {
+                                           sslContextSpec.sslContext(
+                                                   SslContextBuilder.forClient()
+                                                           .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                                           .build()
+                                           );
+                                       } catch (SSLException e) {
+                                           throw new RuntimeException(e);
+                                       }
+                                   }
+                           ))
+                   )
                    .codecs(codecs->codecs
                            .defaultCodecs()
                            .maxInMemorySize(1024 * 1024 * 256))
@@ -856,60 +997,6 @@ public class ArticleService {
     }
 
 
-    private void kafkaSend(Article article){
-        com.ipmugo.articleservice.event.Journal journal = com.ipmugo.articleservice.event.Journal.builder()
-                .id(article.getJournal().getId())
-                .name(article.getJournal().getName())
-                .issn(article.getJournal().getIssn())
-                .e_issn(article.getJournal().getE_issn())
-                .publisher(article.getJournal().getPublisher())
-                .build();
-
-        Set<AuthorEvent> authorEvents = new HashSet<>();
-
-        for(Author author: article.getAuthors()){
-           authorEvents.add(AuthorEvent.builder()
-                   .id(author.getId())
-                   .firstName(author.getFirstName())
-                   .lastName(author.getLastName())
-                   .affiliation(author.getAffiliation())
-                   .build());
-        }
-
-        Set<KeywordEvent> keywordEvents = new HashSet<>();
-
-        if(!article.getKeywords().isEmpty()){
-            for(Keyword keyword : article.getKeywords()){
-                KeywordEvent keywordEvent1 = KeywordEvent.builder()
-                        .name(keyword.getName()).build();
-
-                keywordEvents.add(keywordEvent1);
-            }
-        }
-
-        kafkaTemplate.send("article", ArticleEvent.builder()
-                .id(article.getId())
-                        .journal(journal)
-                        .title(article.getTitle())
-                        .pages(article.getPages())
-                        .publishYear(article.getPublishYear())
-                        .lastModifier(article.getLastModifier())
-                        .publishDate(article.getPublishDate())
-                        .doi(article.getDoi())
-                        .volume(article.getVolume())
-                        .issue(article.getIssue())
-                        .publishStatus(article.getPublishStatus())
-                        .abstractText(article.getAbstractText())
-                        .authorEvents(authorEvents)
-                        .keywordEvents(keywordEvents)
-                        .figures(article.getFigures())
-                        .citationByScopus(article.getCitationByScopus())
-                        .viewsCount(article.getViewsCount())
-                        .downloadCount(article.getDownloadCount())
-                        .citationByCrossRef(article.getCitationByCrossRef())
-                .build());
-    }
-
 
     public void citationScopus(String doi) throws CustomException{
         try {
@@ -942,12 +1029,7 @@ public class ArticleService {
 
             article.get().setCitationByScopus(Integer.valueOf(searchResults.getEntry().get(0).getCitedbyCount()));
 
-            Article save = articleRepository.save(article.get());
-
-            kafkaTemplate.send("articleScopusCitation", ArticleEvent.builder()
-                    .id(save.getId())
-                    .citationByScopus(save.getCitationByScopus())
-                    .build());
+             articleRepository.save(article.get());
 
 
         }catch (Exception e){
@@ -982,12 +1064,9 @@ public class ArticleService {
 
 
 
-            Article save = articleRepository.save(article.get());
+           articleRepository.save(article.get());
 
-            kafkaTemplate.send("articleCrossRefCitation", ArticleEvent.builder()
-                    .id(save.getId())
-                    .citationByCrossRef(save.getCitationByCrossRef())
-                    .build());
+
 
 
         }catch (Exception e){
@@ -1000,22 +1079,123 @@ public class ArticleService {
      * */
     public Iterable<Article> featuredArticles()throws CustomException{
         try {
-            return articleRepository.findTop5ByOrderByCitationByScopusDescCitationByCrossRefDesc();
+            return articleRepository.findTop4ByOrderByCitationByScopusDescCitationByCrossRefDesc();
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
 
-    public void setCounter(SetCounter setCounter) throws CustomException {
+    /**
+     * Statistic
+     * */
+    public HashMap<String, Long> statistic()throws CustomException{
+        try {
+            HashMap<String, Long> statistic = new HashMap<>();
+
+            statistic.put("articleCount", articleRepository.count());
+
+            Aggregation aggregation = Aggregation.newAggregation(
+                    Aggregation.group("firstName", "lastName").count().as("count"),
+                    Aggregation.group().count().as("authorCount"));
+
+            AggregationResults<Author> results = mongoTemplate.aggregate(aggregation, "authors", Author.class);
+            List<Author> resultList = results.getMappedResults();
+
+            statistic.put("authorCount", (long) resultList.size());
+
+            return statistic;
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Update Set Counter
+     * */
+    public Article setCounterUpdate(SetConterEvent setConterEvent) throws CustomException {
         try{
-            Article article = this.getArticle(setCounter.getArticleId());
+            Article article = this.getArticle(setConterEvent.getArticleId());
 
-            article.setViewsCount(setCounter.getViewsCount());
-            article.setDownloadCount(setCounter.getDownloadCount());
+            if(setConterEvent.getStatus().equals(Status.Download)){
+                article.setDownloadCount(setConterEvent.getCount());
+            }
 
-           Article save = articleRepository.save(article);
+            if(setConterEvent.getStatus().equals(Status.View)){
+                article.setDownloadCount(setConterEvent.getCount());
+            }
 
-           this.kafkaSend(save);
+
+            Article save = articleRepository.save(article);
+
+            /**
+             * Build Article For Kafka template
+             * */
+
+            JournalEvent journalEvent = JournalEvent.builder()
+                    .id(save.getJournal().getId())
+                    .name(save.getJournal().getName())
+                    .issn(save.getJournal().getIssn())
+                    .e_issn(save.getJournal().getE_issn())
+                    .publisher(save.getJournal().getPublisher())
+                    .abbreviation(save.getJournal().getAbbreviation())
+                    .journalSite(save.getJournal().getJournalSite())
+                    .scopusIndex(save.getJournal().isScopusIndex())
+                    .build();
+
+
+            List<KeywordEvent> keywordEvents = new ArrayList<>();
+
+            if(save.getKeywords().size() > 0){
+                for(Keyword keyword: save.getKeywords()){
+                    KeywordEvent keywordEvent = KeywordEvent.builder()
+                            .name(keyword.getName()).build();
+
+                    keywordEvents.add(keywordEvent);
+                }
+            }
+
+
+            HashSet<AuthorEvent> authorEvents = new HashSet<>();
+            if(save.getAuthors().size() > 0){
+                for(Author author: save.getAuthors()){
+                    AuthorEvent authorEvent = AuthorEvent.builder()
+                            .id(author.getId())
+                            .firstName(author.getFirstName())
+                            .lastName(author.getLastName())
+                            .email(author.getEmail())
+                            .affiliation(author.getAffiliation())
+                            .orcid(author.getOrcid())
+                            .build();
+
+                    authorEvents.add(authorEvent);
+                }
+            }
+
+            kafkaTemplate.send("article", ArticleEvent.builder()
+                    .id(save.getId())
+                    .journal(journalEvent)
+                    .ojsId(save.getOjsId())
+                    .title(save.getTitle())
+                    .pages(save.getPages())
+                    .publishYear(save.getPublishYear())
+                    .lastModifier(save.getLastModifier())
+                    .publishDate(save.getPublishDate())
+                    .doi(save.getDoi())
+                    .volume(save.getVolume())
+                    .issue(save.getIssue())
+                    .publishStatus(save.getPublishStatus())
+                    .abstractText(save.getAbstractText())
+                    .articlePdf(save.getArticlePdf())
+                    .keywords(keywordEvents)
+                    .authors(authorEvents)
+                    .citationByScopus(save.getCitationByScopus())
+                    .citationByCrossRef(save.getCitationByCrossRef())
+                    .figures(save.getFigures())
+                    .viewsCount(save.getViewsCount())
+                    .downloadCount(save.getDownloadCount())
+                    .build());
+
+            return save;
         }catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }

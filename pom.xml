@@ -26,6 +26,8 @@
         <module>mail-service</module>
         <module>set-counter</module>
         <module>author-service</module>
+        <module>subscribe-service</module>
+        <module>contact-service</module>
 
     </modules>
 

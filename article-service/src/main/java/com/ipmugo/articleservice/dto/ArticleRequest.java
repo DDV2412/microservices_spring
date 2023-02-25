@@ -7,10 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
-import java.util.HashMap;
+import javax.validation.constraints.*;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -20,8 +17,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ArticleRequest {
-    @NotBlank(message = "Journal Id must not be blank")
+    @NotNull
     private UUID journalId;
+
 
     @NotBlank(message = "Abstract must not be blank")
     private String ojsId;
@@ -81,8 +79,6 @@ public class ArticleRequest {
     private int citationByScopus;
 
     private int citationByCrossRef;
-
-
 
     private List<String> figures;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -15,14 +16,21 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(indexName = "article")
+@Document(indexName = Article.INDEX)
 public class Article {
 
-    @Field(type = FieldType.Keyword)
+    public static final String INDEX = "article";
+
+
+    @Id
     private String id;
 
-    @Field(type = FieldType.Object)
+
+    @Field(type = FieldType.Object, includeInParent = true)
     private Journal journal;
+
+    @Field(type = FieldType.Keyword)
+    private String ojsId;
 
     @Field(type = FieldType.Text, analyzer = "english")
     private String title;
@@ -35,35 +43,45 @@ public class Article {
 
     @Field(type = FieldType.Keyword)
     private String lastModifier;
+
     @Field(type = FieldType.Keyword)
     private String publishDate;
+
     @Field(type = FieldType.Keyword)
     private String doi;
+
     @Field(type = FieldType.Keyword)
     private String volume;
+
     @Field(type = FieldType.Keyword)
     private String issue;
+
     @Field(type = FieldType.Keyword)
     private String publishStatus;
 
-    @Field(type = FieldType.Text, analyzer = "english")
-    private String abstractText;
-    @Field(type = FieldType.Nested)
-    private Set<Keyword> keywords;
-    @Field(type = FieldType.Nested)
-    private Set<Author> authors;
+
     @Field(type = FieldType.Text)
-    private List<String> figures;
+    private String abstractText;
+
+
+    @Field(type = FieldType.Keyword)
+    private String articlePdf;
+
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private List<Keyword> keywords;
+
+    @Field(type = FieldType.Nested, includeInParent = true)
+    private Set<Author> authors;
     @Field(type = FieldType.Keyword)
     private int citationByScopus;
     @Field(type = FieldType.Keyword)
     private int citationByCrossRef;
-
     @Field(type = FieldType.Keyword)
-    private int viewsCount;
-
+    private List<String> figures;
     @Field(type = FieldType.Keyword)
-    private  int downloadCount;
+    private long viewsCount;
+    @Field(type = FieldType.Keyword)
+    private long downloadCount;
 
 }
 

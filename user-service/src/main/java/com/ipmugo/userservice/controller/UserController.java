@@ -6,6 +6,7 @@ import com.ipmugo.userservice.dto.ResponseData;
 import com.ipmugo.userservice.model.Role;
 import com.ipmugo.userservice.model.User;
 import com.ipmugo.userservice.utils.CustomException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/management")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired

@@ -23,7 +23,7 @@ public interface ArticleRepository extends MongoRepository<Article, String> {
 
     Iterable<Article> findByJournalIdOrderByIssueDescPublishDateDesc(String journalId);
 
-    Iterable<Article> findTop5ByOrderByCitationByScopusDescCitationByCrossRefDesc();
+    Iterable<Article> findTop4ByOrderByCitationByScopusDescCitationByCrossRefDesc();
 
 
 }

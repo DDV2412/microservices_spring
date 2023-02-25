@@ -1,0 +1,8 @@
+com\ipmugo\mailservice\dto\MailRequest.class
+com\ipmugo\mailservice\controller\MailController.class
+com\ipmugo\mailservice\MailServiceApplication.class
+com\ipmugo\mailservice\dto\ResponseData$ResponseDataBuilder.class
+com\ipmugo\mailservice\utils\CustomException.class
+com\ipmugo\mailservice\dto\MailRequest$MailRequestBuilder.class
+com\ipmugo\mailservice\dto\ResponseData.class
+com\ipmugo\mailservice\service\MailService.class

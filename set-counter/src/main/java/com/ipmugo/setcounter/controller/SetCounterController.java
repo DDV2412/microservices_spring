@@ -1,14 +1,16 @@
 package com.ipmugo.setcounter.controller;
 
 import com.ipmugo.setcounter.model.Status;
-import com.ipmugo.setcounter.model.WeekCounter;
 import com.ipmugo.setcounter.service.SetCounterService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/set-counter")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class SetCounterController {
 
     @Autowired
@@ -26,8 +28,6 @@ public class SetCounterController {
         return ResponseEntity.ok(setCounterService.getCounter(status));
     }
 
-    @GetMapping("/percentage")
-    public ResponseEntity<WeekCounter> percentage(){
-        return ResponseEntity.ok(setCounterService.getPercentage());
-    }
+
+
 }

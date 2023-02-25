@@ -10,6 +10,7 @@ import com.ipmugo.journalservice.model.Category;
 import com.ipmugo.journalservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,7 +85,7 @@ public class JournalService {
      * */
     public Page<Journal> getAllJournals(Pageable pageable, String searchTerm) throws CustomException {
         try{
-            if (searchTerm == null || searchTerm.isEmpty()) {
+            if (searchTerm == null || StringUtils.isBlank(searchTerm)) {
                 return journalRepository.findAll(pageable);
             }
             return journalRepository.searchTerm(pageable, searchTerm);
@@ -141,6 +142,18 @@ public class JournalService {
             Optional<Journal> journal = journalRepository.findById(id);
             if (journal.isEmpty()) {
                 throw new CustomException("Journal with " + id +" not found", HttpStatus.NOT_FOUND);
+            }
+            return journal.get();
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    public Journal getJournalByAbbreviation(String abbreviation) throws CustomException {
+        try{
+            Optional<Journal> journal = journalRepository.findByAbbreviation(abbreviation);
+            if (journal.isEmpty()) {
+                throw new CustomException("Journal with " + abbreviation +" not found", HttpStatus.NOT_FOUND);
             }
             return journal.get();
         }catch (Exception e){

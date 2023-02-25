@@ -6,16 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class AuthorEvent {
 
-
     private String id;
-
 
     private String firstName;
 
@@ -23,7 +20,16 @@ public class AuthorEvent {
     private  String lastName;
 
 
+    private String email;
+
+
     private String affiliation;
+
+
+    private String biography;
+
+
+    private String orcid;
 
 
 }

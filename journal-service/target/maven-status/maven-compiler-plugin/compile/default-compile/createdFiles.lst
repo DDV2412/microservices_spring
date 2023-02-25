@@ -9,6 +9,7 @@ com\ipmugo\journalservice\dto\ResponseData$ResponseDataBuilder.class
 com\ipmugo\journalservice\dto\SNIPList.class
 com\ipmugo\journalservice\dto\CiteScoreYearInfoList.class
 com\ipmugo\journalservice\dto\CitationReportScopus$CitationReportScopusBuilder.class
+com\ipmugo\journalservice\utils\Automate.class
 com\ipmugo\journalservice\dto\SJRList$SJRListBuilder.class
 com\ipmugo\journalservice\event\JournalEvent$JournalEventBuilder.class
 com\ipmugo\journalservice\controller\JournalController.class

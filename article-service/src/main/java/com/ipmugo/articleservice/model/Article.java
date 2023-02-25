@@ -83,13 +83,18 @@ public class Article {
     @DBRef
     private Set<Author> authors;
 
+    @Field
     private int citationByScopus;
 
+    @Field
     private int citationByCrossRef;
 
+    @Field
     private List<String> figures;
 
-    private int viewsCount;
+    @Field
+    private long viewsCount;
 
-    private int downloadCount;
+    @Field
+    private long downloadCount;
 }

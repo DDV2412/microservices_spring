@@ -1,10 +1,7 @@
-F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\model\WeekCounter.java
-F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\utils\Automate.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\controller\SetCounterController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\model\SetCounter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\repository\SetCounterRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\model\Status.java
-F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\event\SetCounter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\service\SetCounterService.java
-F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\repository\WeekCounterRepository.java
+F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\event\SetConter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\set-counter\src\main\java\com\ipmugo\setcounter\SetCounterApplication.java

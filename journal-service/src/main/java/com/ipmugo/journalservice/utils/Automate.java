@@ -21,7 +21,7 @@ public class Automate {
     @Autowired
     private CitationReportService citationReportService;
 
-    @Scheduled(cron = "0 0 0 10 * *", zone = "GMT+7")
+    @Scheduled(cron = "0 0 14 21 * *", zone = "GMT+7")
     public void syncronizedMetric(){
         Pageable pageable = PageRequest.of(0, 25);
 
@@ -31,9 +31,12 @@ public class Automate {
             if(journals.getContent().size() == 0){
                 break;
             }
-
             for (Journal journal: journals){
-                citationReportService.syncCitationReport(journal.getIssn());
+               try{
+                   citationReportService.syncCitationReport(journal.getIssn());
+               }catch (Exception e){
+                   continue;
+               }
             }
         }while (true);
 

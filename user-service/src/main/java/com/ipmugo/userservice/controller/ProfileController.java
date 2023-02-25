@@ -24,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ProfileController {
 
     @Autowired

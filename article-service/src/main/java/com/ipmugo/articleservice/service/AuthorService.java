@@ -34,11 +34,10 @@ public class AuthorService {
                    author1.get().setFirstName(author.getFirstName());
                    author1.get().setLastName(author.getLastName());
                    author1.get().setEmail(author.getEmail());
-                   author1.get().setBiography(author.getBiography());
                    author1.get().setAffiliation(author.getAffiliation());
                    author1.get().setOrcid(author.getOrcid());
-                   author1.get().setGoogleScholar(author.getGoogleScholar());
-                   author1.get().setScopusId(author.getScopusId());
+
+
 
                    return authorRepository.save(author1.get());
                }
@@ -69,16 +68,13 @@ public class AuthorService {
             Optional<Author> authorUpdate = authorRepository.findById(id);
 
             if(authorUpdate.isEmpty()){
-                throw new CustomException("Author with id "+ id + " not found", HttpStatus.BAD_GATEWAY);
+                throw new CustomException("AuthorEvent with id "+ id + " not found", HttpStatus.BAD_GATEWAY);
             }
             authorUpdate.get().setFirstName(author.getFirstName());
             authorUpdate.get().setLastName(author.getLastName());
             authorUpdate.get().setEmail(author.getEmail());
             authorUpdate.get().setAffiliation(author.getAffiliation());
-            authorUpdate.get().setBiography(author.getBiography());
             authorUpdate.get().setOrcid(author.getOrcid());
-            authorUpdate.get().setGoogleScholar(author.getGoogleScholar());
-            authorUpdate.get().setScopusId(author.getScopusId());
             return authorRepository.save(authorUpdate.get());
 
         }catch (Exception e){

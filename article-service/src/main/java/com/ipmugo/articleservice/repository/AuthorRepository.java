@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface AuthorRepository extends MongoRepository<Author, String> {
 
-    @Query("SELECT a FROM Author a WHERE a.firstName LIKE %:firstName% AND a.doi LIKE %:lastName%")
+    @Query("SELECT a FROM AuthorEvent a WHERE a.firstName LIKE %:firstName% AND a.doi LIKE %:lastName%")
     Page<Author> searchAuthor(Pageable pageable, String firstName, String lastName);
 
 }

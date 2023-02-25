@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableMongoAuditing
 @EnableScheduling
 public class SetCounterApplication {
+
+
     public static void main(String[] args) {
         SpringApplication.run(SetCounterApplication.class, args);
     }

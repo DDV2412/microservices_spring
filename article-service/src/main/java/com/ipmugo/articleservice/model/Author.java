@@ -31,16 +31,10 @@ public class Author {
     @Field
     private String affiliation;
 
-    @Field
-    private String biography;
 
     @Field
     private String orcid;
 
-    @Field
-    private String scopusId;
 
-    @Field
-    private String googleScholar;
 
 }

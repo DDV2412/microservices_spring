@@ -6,6 +6,7 @@ import com.ipmugo.journalservice.model.Category;
 import com.ipmugo.journalservice.model.Journal;
 import com.ipmugo.journalservice.service.CategoryService;
 import com.ipmugo.journalservice.utils.CustomException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -18,6 +19,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/category")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class CategoryController {
 
     @Autowired

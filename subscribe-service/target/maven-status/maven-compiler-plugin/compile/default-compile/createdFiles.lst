@@ -1,0 +1,9 @@
+com\ipmugo\subscribeservice\model\Subscribe$SubscribeBuilder.class
+com\ipmugo\subscribeservice\SubscribeServiceApplication.class
+com\ipmugo\subscribeservice\dto\ResponseData$ResponseDataBuilder.class
+com\ipmugo\subscribeservice\controller\SubscribeController.class
+com\ipmugo\subscribeservice\service\SubscribeService.class
+com\ipmugo\subscribeservice\dto\ResponseData.class
+com\ipmugo\subscribeservice\repository\SubscribeRepository.class
+com\ipmugo\subscribeservice\model\Subscribe.class
+com\ipmugo\subscribeservice\utils\CustomException.class

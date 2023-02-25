@@ -1,6 +1,7 @@
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\repository\AuthorRepository.java
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\controller\UserController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\service\UserService.java
+F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\dto\ResponseData.java
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\service\ArticleService.java
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\model\Author.java
 F:\Project\MICROSERVICE\ipmugo-microservice\author-service\src\main\java\com\ipmugo\authorservice\repository\UserRepository.java

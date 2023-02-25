@@ -14,7 +14,6 @@ F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ip
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\AboutType.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\OAIPMHtype.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\ListSetsType.java
-F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\event\Journal.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\dto\ArticleRequest.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\DescriptionType.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\purl\dc\elements\ObjectFactory.java
@@ -22,7 +21,6 @@ F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ip
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\oai_dc\ObjectFactory.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\ArticleServiceApplication.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\event\AuthorEvent.java
-F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\event\SetCounter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\IdentifyType.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\config\WebClientConfig.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\oai_dc\OaiDcType.java
@@ -41,7 +39,6 @@ F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ip
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\GranularityType.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\service\JournalService.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\MetadataFormatType.java
-F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\event\ArticleAssignEvent.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\dto\EntryScopus.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\package-info.java
 F:\Project\MICROSERVICE\ipmugo-microservice\article-service\src\main\java\com\ipmugo\articleservice\schema\openarchives\oai\pmh\GetRecordType.java

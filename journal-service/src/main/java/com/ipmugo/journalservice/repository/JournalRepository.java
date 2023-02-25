@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface JournalRepository extends JpaRepository<Journal, UUID> {
     Optional<Journal> findByIssn(String issn);
 
+    Optional<Journal> findByAbbreviation(String abbreviation);
+
     Page<Journal> findAll(Pageable pageable);
 
     @Query("SELECT j FROM Journal j WHERE j.name LIKE %:searchTerm% OR j.issn LIKE %:searchTerm%")

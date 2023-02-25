@@ -14,16 +14,7 @@ public class WebClientConfig {
     @Bean
     @LoadBalanced
     public WebClient.Builder webClientBuilder(){
-        ExchangeFilterFunction addAccessTokenHeader = (clientRequest, next) -> {
-            final HttpHeaders headers = clientRequest.headers();
-            final String accessToken = headers.getFirst("accessToken");
-
-            return next.exchange(ClientRequest.from(clientRequest)
-                    .header("Authorization", "Bearer " + accessToken)
-                    .build());
-        };
-
-        return WebClient.builder().filter(addAccessTokenHeader);
+        return WebClient.builder();
     }
 
     @Bean

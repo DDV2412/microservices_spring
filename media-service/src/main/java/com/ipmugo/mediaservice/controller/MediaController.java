@@ -27,6 +27,7 @@ import com.ipmugo.mediaservice.service.MediaService;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class MediaController {
 
     @Autowired

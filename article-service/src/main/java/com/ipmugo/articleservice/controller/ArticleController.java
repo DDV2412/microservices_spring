@@ -3,7 +3,6 @@ package com.ipmugo.articleservice.controller;
 import com.ipmugo.articleservice.service.JournalService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import com.ipmugo.articleservice.dto.ArticleRequest;
 import com.ipmugo.articleservice.dto.ResponseData;
@@ -21,12 +20,14 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/article")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ArticleController {
 
     @Autowired
@@ -105,12 +106,21 @@ public class ArticleController {
      * Get List Article
      * */
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Article>>> getAllArticles(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search) {
+    public ResponseEntity<ResponseData<Page<Article>>> getAllArticles(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
         ResponseData<Page<Article>> responseData = new ResponseData<>();
 
         try{
 
-            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size), Sort.by("publishDate").descending());
+            Sort sortBy = Sort.by(Sort.Direction.DESC, "publishDate");
+
+            if (sort != null && !sort.isEmpty()) {
+                String[] sortParams = sort.split(",");
+                String field = sortParams[0];
+                Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
+                sortBy = Sort.by(direction, field);
+            }
+
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size), sortBy);
             responseData.setStatus(true);
             responseData.setData(articleService.getAllArticle(pageable, search));
 
@@ -292,6 +302,23 @@ public class ArticleController {
         try{
             responseData.setStatus(true);
             responseData.setData(articleService.featuredArticles());
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    @GetMapping("/statistic")
+    public ResponseEntity<ResponseData<HashMap<String, Long>>> statistic() {
+        ResponseData<HashMap<String, Long>> responseData = new ResponseData<>();
+
+        try{
+            responseData.setStatus(true);
+            responseData.setData(articleService.statistic());
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){

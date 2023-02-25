@@ -11,7 +11,6 @@ import java.util.List;
 
 public interface SetCounterRepository extends MongoRepository<SetCounter, String> {
 
-    Long countByArticleIdAndStatus(String articleId, Status status);
     Long countByStatus(Status status);
 
 }

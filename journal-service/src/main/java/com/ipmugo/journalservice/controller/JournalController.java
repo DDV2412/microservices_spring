@@ -26,6 +26,7 @@ import com.ipmugo.journalservice.service.JournalService;
 @RestController
 @RequestMapping("/api/journal")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class JournalController {
 
     @Autowired
@@ -97,11 +98,20 @@ public class JournalController {
      * Get List Journal
      * */
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Journal>>> getAllJournals(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search) {
+    public ResponseEntity<ResponseData<Page<Journal>>> getAllJournals(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
         ResponseData<Page<Journal>> responseData = new ResponseData<>();
 
         try{
-            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size), Sort.by("createdAt").descending());
+            Sort sortBy = Sort.by(Sort.Direction.DESC, "createdAt");
+
+            if (sort != null && !sort.isEmpty()) {
+                String[] sortParams = sort.split(",");
+                String field = sortParams[0];
+                Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
+                sortBy = Sort.by(direction, field);
+            }
+
+            Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size), sortBy);
             responseData.setStatus(true);
             responseData.setData(journalService.getAllJournals(pageable, search));
 
@@ -123,6 +133,21 @@ public class JournalController {
         try{
             responseData.setStatus(true);
             responseData.setData(journalService.getJournal(id));
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    @GetMapping("/abbreviation/{abbreviation}")
+    public ResponseEntity<ResponseData<Journal>> getJournal(@PathVariable("abbreviation") String abbreviation) {
+        ResponseData<Journal> responseData = new ResponseData<>();
+        try{
+            responseData.setStatus(true);
+            responseData.setData(journalService.getJournalByAbbreviation(abbreviation));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
