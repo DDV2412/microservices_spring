@@ -4,6 +4,7 @@ package com.ipmugo.searchservice;
 import com.ipmugo.searchservice.event.ArticleEvent;
 import com.ipmugo.searchservice.event.AuthorEvent;
 import com.ipmugo.searchservice.event.KeywordEvent;
+import com.ipmugo.searchservice.event.UpdateCounter;
 import com.ipmugo.searchservice.model.Article;
 import com.ipmugo.searchservice.model.Author;
 import com.ipmugo.searchservice.model.Journal;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.kafka.annotation.KafkaListener;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.List;
 
 @SpringBootApplication
 @EnableEurekaClient
+@EnableElasticsearchRepositories(basePackages = "com.ipmugo.searchservice.repository")
 public class SearchSearchApplication {
 
     @Autowired
@@ -74,7 +77,7 @@ public class SearchSearchApplication {
                 }
             }
 
-            HashSet<Author> authors = new HashSet<>();
+            List<Author> authors =  new ArrayList<>();
 
             if(articleEvent.getAuthors().size() > 0){
                 for(AuthorEvent author: articleEvent.getAuthors()){
@@ -116,6 +119,29 @@ public class SearchSearchApplication {
                     .build();
 
             articleService.saveArticle(article);
+        } catch (Exception ex) {
+            logger.error("Failed to save Article to Elasticsearch: " + ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    @KafkaListener(topics = "setUpdate", groupId = "setUpdateId", clientIdPrefix = "setUpdateId")
+    public void handleUpdate(UpdateCounter updateCounter) {
+
+        try{
+            /**
+             * Build Article For Kafka template
+             * */
+
+            Article article = Article.builder()
+                    .id(updateCounter.getArticleId())
+                    .citationByScopus(updateCounter.getCitationByScopus())
+                    .citationByCrossRef(updateCounter.getCitationByCrossRef())
+                    .viewsCount(updateCounter.getViewsCount())
+                    .downloadCount(updateCounter.getDownloadCount())
+                    .build();
+
+            articleService.updateCounter(article);
         } catch (Exception ex) {
             logger.error("Failed to save Article to Elasticsearch: " + ex.getMessage(), ex);
             throw ex;

@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/api-gateway","imageId":"sha256:e6dfcc605973f9d5b0616c30e40168540d3dae3fc589ffaaa5762ad5f4989679","imageDigest":"sha256:891354d00665882ad17a3ea2f6b595724e9f0b145f81b84201d191cd2822b027","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/api-gateway","imageId":"sha256:e7e3f52d74afccce2779a437f1a2e471e66fc71cf043b0ad362362d32411935e","imageDigest":"sha256:2d532117ad41122915225dba9f3aa71bc77b77d4535596db8fcbd762e4cfa5e1","tags":["latest"],"imagePushed":true}

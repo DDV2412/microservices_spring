@@ -37,9 +37,12 @@ public class JournalRequest {
     @Size(max = 12, message = "Abbreviation should not exceed 12 characters")
     private String abbreviation;
 
-    @NotBlank(message = "Thumbnail must not be blank")
-    @Size(max = 255, message = "Thumbnail should not exceed 255 characters")
-    private String thumbnail;
+
+    private String pageImage;
+
+    @NotBlank(message = "Cover image must not be blank")
+    @Size(max = 255, message = "Cover image should not exceed 255 characters")
+    private String coverImage;
 
     @NotBlank(message = "Description must not be blank")
     private String description;

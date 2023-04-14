@@ -21,16 +21,16 @@ public class Author {
 
     @Id
     private String id;
-    @Field(type = FieldType.Text, analyzer = "english")
+    @Field(type = FieldType.Keyword)
     private String firstName;
 
-    @Field(type = FieldType.Text, analyzer = "english")
+    @Field(type = FieldType.Keyword)
     private  String lastName;
 
     @Field(type = FieldType.Keyword)
     private String email;
 
-    @Field(type = FieldType.Text, analyzer = "english")
+    @Field(type = FieldType.Keyword)
     private String affiliation;
 
     @Field(type = FieldType.Text, analyzer = "english")

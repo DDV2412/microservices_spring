@@ -1,10 +1,12 @@
 package com.ipmugo.articleservice;
 
 import com.ipmugo.articleservice.event.JournalEvent;
-import com.ipmugo.articleservice.event.SetConterEvent;
+import com.ipmugo.articleservice.event.SetCounterEvent;
 import com.ipmugo.articleservice.model.Journal;
 import com.ipmugo.articleservice.service.ArticleService;
 import com.ipmugo.articleservice.service.JournalService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,6 +30,9 @@ public class ArticleServiceApplication {
         @Autowired
         private ArticleService articleService;
 
+        private static final Logger logger = LoggerFactory.getLogger(ArticleServiceApplication.class);
+
+
         @KafkaListener(topics = "journal", groupId = "journalId", clientIdPrefix = "journalId")
         public void handleNotification(JournalEvent journalEvent) {
                 Journal journal = Journal.builder()
@@ -43,10 +48,10 @@ public class ArticleServiceApplication {
                 journalService.saveJournal(journal);
         }
 
-        @KafkaListener(topics = "setConter", groupId = "setCounterId", clientIdPrefix = "setCounterId")
-        public void handleNotification(List<SetConterEvent> setConterEvents) {
-                for (SetConterEvent setConterEvent: setConterEvents){
-                        articleService.setCounterUpdate(setConterEvent);
+        @KafkaListener(topics = "setCounter", groupId = "setCounterId", clientIdPrefix = "setCounterId")
+        public void handleNotification(SetCounterEvent setCounterEvent) {
+                if(!setCounterEvent.getDoi().isEmpty()){
+                        articleService.setCounterUpdate(setCounterEvent);
                 }
         }
 

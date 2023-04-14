@@ -1,21 +1,23 @@
 package com.ipmugo.authorservice.service;
 
-import com.ipmugo.authorservice.model.Article;
-import com.ipmugo.authorservice.model.Author;
+import com.ipmugo.authorservice.model.Publication;
 import com.ipmugo.authorservice.model.User;
 import com.ipmugo.authorservice.repository.ArticleRepository;
-import com.ipmugo.authorservice.repository.AuthorRepository;
 import com.ipmugo.authorservice.repository.UserRepository;
 import com.ipmugo.authorservice.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -26,146 +28,83 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
-    private AuthorRepository authorRepository;
-
-    @Autowired
     private ArticleRepository articleRepository;
 
     /**
-     * Assign Article with Author
+     * Assign Publication with Author
      * */
-    public void assignArticle (User user, List<Article> articles) throws CustomException{
-        try{
-            Optional<User> userOptional = userRepository.findById(user.getId());
+    public User assignArticle(User data) throws CustomException {
+        try {
+            Optional<User> userOptional = userRepository.findById(data.getId());
 
-            if(userOptional.isEmpty()){
-                User save = userRepository.save(user);
+            User user;
+            user = userOptional.orElseGet(() -> userRepository.save(User.builder()
+                            .id(data.getId())
+                            .firstName(data.getFirstName())
+                            .lastName(data.getLastName())
+                            .affiliation(data.getAffiliation())
+                            .orcid(data.getOrcid())
+                            .googleScholar(data.getGoogleScholar())
+                            .citation(data.getCitation())
+                            .profile(data.getProfile())
+                            .publications(new HashSet<>())
+                    .build()));
 
-                HashSet<Article> articleHashSet = new HashSet<>();
-                for(Article article: articles){
-                    Optional<Article> articleOptional = articleRepository.findById(article.getId());
+            Set<Publication> articleList = new HashSet<>();
+            for (Publication article : data.getPublications()) {
+                Optional<Publication> articleOptional = articleRepository.findById(article.getId());
 
-                    if(articleOptional.isEmpty()){
-
-                        HashSet<Author> authors = new HashSet<>();
-
-                        for(Author author: article.getAuthors()){
-                            Optional<Author> authorOptional = authorRepository.findById(author.getId());
-
-                            if(authorOptional.isEmpty()){
-                                Author authorBuild = Author.builder()
-                                        .id(author.getId())
-                                        .firstName(author.getFirstName())
-                                        .lastName(author.getLastName())
-                                        .affiliation(author.getAffiliation())
-                                        .build();
-
-
-                                authors.add(authorRepository.save(authorBuild));
-                            }else{
-                                authors.add(author);
-                            }
-
-
-                        }
-                        Article articleBuild = Article.builder()
-                                .id(article.getId())
-                                .journal(article.getJournal())
-                                .title(article.getTitle())
-                                .publishDate(article.getPublishDate())
-                                .doi(article.getDoi())
-                                .volume(article.getVolume())
-                                .issue(article.getIssue())
-                                .articlePdf(article.getArticlePdf())
-                                .authors(authors)
-                                .citationByCrossRef(article.getCitationByCrossRef())
-                                .citationByScopus(article.getCitationByScopus())
-                                .viewsCount(article.getViewsCount())
-                                .downloadCount(article.getDownloadCount())
-                                .build();
-
-
-                        articleHashSet.add(articleRepository.save(article));
-                    }else{
-                        articleHashSet.add(article);
-                    }
-
-
+                Publication savedArticle;
+                if (articleOptional.isEmpty()) {
+                    Publication articleBuilder = Publication.builder()
+                            .id(article.getId())
+                            .journal(article.getJournal())
+                            .title(article.getTitle())
+                            .publishDate(article.getPublishDate())
+                            .doi(article.getDoi())
+                            .volume(article.getVolume())
+                            .issue(article.getIssue())
+                            .articlePdf(article.getArticlePdf())
+                            .citationByScopus(article.getCitationByScopus())
+                            .citationByCrossRef(article.getCitationByCrossRef())
+                            .viewsCount(article.getViewsCount())
+                            .authors(new HashSet<>())
+                            .downloadCount(article.getDownloadCount())
+                            .build();
+                    savedArticle = articleRepository.save(articleBuilder);
+                } else {
+                    savedArticle = articleOptional.get();
                 }
 
-                save.setArticles(articleHashSet);
-
-                userRepository.save(save);
-            }else{
-                HashSet<Article> articleHashSet = new HashSet<>();
-                for(Article article: articles){
-                    Optional<Article> articleOptional = articleRepository.findById(article.getId());
-
-                    if(articleOptional.isEmpty()){
-
-                        HashSet<Author> authors = new HashSet<>();
-
-                        for(Author author: article.getAuthors()){
-                            Optional<Author> authorOptional = authorRepository.findById(author.getId());
-
-                            if(authorOptional.isEmpty()){
-                                Author authorBuild = Author.builder()
-                                        .id(author.getId())
-                                        .firstName(author.getFirstName())
-                                        .lastName(author.getLastName())
-                                        .affiliation(author.getAffiliation())
-                                        .build();
-
-
-                                authors.add(authorRepository.save(authorBuild));
-                            }else{
-                                authors.add(author);
-                            }
-
-
-                        }
-                        Article articleBuild = Article.builder()
-                                .id(article.getId())
-                                .journal(article.getJournal())
-                                .title(article.getTitle())
-                                .publishDate(article.getPublishDate())
-                                .doi(article.getDoi())
-                                .volume(article.getVolume())
-                                .issue(article.getIssue())
-                                .articlePdf(article.getArticlePdf())
-                                .authors(authors)
-                                .citationByCrossRef(article.getCitationByCrossRef())
-                                .citationByScopus(article.getCitationByScopus())
-                                .viewsCount(article.getViewsCount())
-                                .downloadCount(article.getDownloadCount())
-                                .build();
-
-
-                        articleHashSet.add(articleRepository.save(article));
-                    }else{
-                        articleHashSet.add(article);
-                    }
-
-
-                }
-
-                userOptional.get().setArticles(articleHashSet);
-
-                userRepository.save(userOptional.get());
+                articleList.add(savedArticle);
             }
 
+            for (Publication article : articleList) {
+                article.getAuthors().add(user);
+            }
 
-        }catch(Exception e){
+            user.getPublications().addAll(articleList);
+            return userRepository.save(user);
+
+        } catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
 
+
     /**
      * Get All Publication Author
      * */
-    public Iterable<Article> getPublications(String id) throws CustomException{
+    public Iterable<Publication> getPublications(String id) throws CustomException{
         try{
-            return articleRepository.findByAuthorAssign_Id(id);
+            Optional<User> user = userRepository.findById(id);
+
+            if(user.isEmpty()){
+                throw new CustomException("Author with ID "+ id + " not found", HttpStatus.NOT_FOUND);
+            }
+
+            return user.get().getPublications();
+
         }catch(Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -176,8 +115,80 @@ public class UserService {
      * */
     public List<User> featuredAuthor() throws CustomException{
         try{
-            return userRepository.findTop4ByOrderByHIndexAndArticleValuesDescWithLimit();
+            List<Object[]> authors =  userRepository.findUserByHighestCitationAndMostPublications();
+
+            List<User> users = new ArrayList<>();
+            for (Object[] row : authors) {
+                User user = (User) row[0];
+                users.add(user);
+            }
+            return users;
         }catch(Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    public Page<User> getAllAuthor(Pageable pageable) throws CustomException{
+        try{
+            return userRepository.findAll(pageable);
+        }catch(Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Admin Get User By id
+     * */
+    public User getUser(String id) throws CustomException{
+        try {
+            Optional<User> user = userRepository.findById(id);
+
+            if(user.isEmpty()){
+                throw new CustomException("User with id " + id + " not found", HttpStatus.BAD_GATEWAY);
+            }
+
+            return user.get();
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     * Async Google Scholar
+     * */
+    public  void asyncScholar(String id) throws CustomException{
+        try{
+            User user = this.getUser(id);
+
+            if(user.getGoogleScholar() == null){
+                throw new CustomException("User with id "+ id + " not found", HttpStatus.BAD_GATEWAY);
+            }
+
+            Connection.Response response = Jsoup.connect(
+                            user.getGoogleScholar())
+                    .timeout(0)
+                    .execute();
+
+            Document document = Jsoup.connect(
+                            user.getGoogleScholar())
+                    .timeout(0)
+                    .get();
+
+            if(response.statusCode() != 200){
+                throw new CustomException("Connection loss", HttpStatus.BAD_GATEWAY);
+            }
+
+            List<Element> citation = document.getElementsByClass("gsc_rsb_std");
+
+            Element profile = document.getElementById("gsc_prf_pu");
+
+
+            user.setCitation(citation.get(2).text());
+
+            userRepository.save(user);
+
+
+        }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }

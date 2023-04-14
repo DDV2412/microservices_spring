@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/journal-service","imageId":"sha256:6283878caa419bfa501805dd0bf93706817c4aa1eccc438c55b5a0ea8d8a97ab","imageDigest":"sha256:43e98a05eb6c9690df544b1f84d4b3d4bd6d734195b1dc79bb0fa87743d2478f","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/journal-service","imageId":"sha256:9dc9ebfea4e06e3fc06ac4906853d5a27d512b4db77c9fae8a8e8e9cec0435ef","imageDigest":"sha256:410d3f97ccccd92f0a49900a5ea593199e9bdc7dd9827083f5226d50ae28b19c","tags":["latest"],"imagePushed":true}

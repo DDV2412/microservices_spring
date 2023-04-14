@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/user-service","imageId":"sha256:b87cf020de3523554ef70bc835a0862b59fd725aca6281a479eb6e725bec56b8","imageDigest":"sha256:21a472aa13df7445ae9e0c335b473c6f3e716b44c4dce47e37ff3adac83a15db","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/user-service","imageId":"sha256:30572b9675d4bebba1a5493e033c4e27935fa24dfcaf11396ca51f21d8c63a04","imageDigest":"sha256:650a1559381973418c5b5fc000927955af767849800067a103007942c4da3898","tags":["latest"],"imagePushed":true}

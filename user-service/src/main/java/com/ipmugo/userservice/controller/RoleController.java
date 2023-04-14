@@ -23,7 +23,7 @@ public class RoleController {
     /**
      * All Role
      * */
-    @GetMapping()
+    @GetMapping("/role")
     public ResponseEntity<ResponseData<Iterable<Role>>> getAllRole(){
         ResponseData<Iterable<Role>> responseData = new ResponseData<>();
 

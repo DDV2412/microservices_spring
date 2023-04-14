@@ -35,7 +35,8 @@ public class DataSeeders  implements ApplicationListener<ContextRefreshedEvent> 
         if (roleRepository.count() < 1) {
             List<Role> roleList = Arrays.asList(
                     Role.builder().name(UserRole.Administrator).build(),
-                    Role.builder().name(UserRole.Reader).build()
+                    Role.builder().name(UserRole.Reader).build(),
+                    Role.builder().name(UserRole.Author).build()
             );
 
             roleRepository.saveAll(roleList);

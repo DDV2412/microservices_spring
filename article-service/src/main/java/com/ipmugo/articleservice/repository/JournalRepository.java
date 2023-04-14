@@ -5,9 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface JournalRepository extends MongoRepository<Journal, UUID> {
 
     Page<Journal> findAll(Pageable pageable);
+
+    Optional<Journal> findByAbbreviation(String abbreviation);
 }

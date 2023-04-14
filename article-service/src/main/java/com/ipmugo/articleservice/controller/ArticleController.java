@@ -1,8 +1,17 @@
 package com.ipmugo.articleservice.controller;
 
+import com.ipmugo.articleservice.model.Author;
+import com.ipmugo.articleservice.model.Keyword;
+import com.ipmugo.articleservice.schema.openarchives.oai.oai_dc.OaiDcType;
+import com.ipmugo.articleservice.schema.openarchives.oai.pmh.ListRecordsType;
+import com.ipmugo.articleservice.schema.openarchives.oai.pmh.OAIPMHtype;
+import com.ipmugo.articleservice.schema.openarchives.oai.pmh.RecordType;
+import com.ipmugo.articleservice.schema.purl.dc.elements.ElementType;
 import com.ipmugo.articleservice.service.JournalService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import lombok.RequiredArgsConstructor;
 import com.ipmugo.articleservice.dto.ArticleRequest;
 import com.ipmugo.articleservice.dto.ResponseData;
@@ -14,15 +23,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/article")
@@ -106,7 +115,7 @@ public class ArticleController {
      * Get List Article
      * */
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Article>>> getAllArticles(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
+    public ResponseEntity<ResponseData<Page<Article>>> getAllArticles(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
         ResponseData<Page<Article>> responseData = new ResponseData<>();
 
         try{
@@ -114,7 +123,7 @@ public class ArticleController {
             Sort sortBy = Sort.by(Sort.Direction.DESC, "publishDate");
 
             if (sort != null && !sort.isEmpty()) {
-                String[] sortParams = sort.split(",");
+                String[] sortParams = sort.split(":");
                 String field = sortParams[0];
                 Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
                 sortBy = Sort.by(direction, field);
@@ -136,12 +145,12 @@ public class ArticleController {
     /**
      * Get Article By ID
      * */
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<Article>> getArticle(@PathVariable("id") String id) {
+    @GetMapping("/{unique}/{doi}")
+    public ResponseEntity<ResponseData<Article>> getArticle(@PathVariable("unique") String unique, @PathVariable("doi") String doi) {
         ResponseData<Article> responseData = new ResponseData<>();
         try{
             responseData.setStatus(true);
-            responseData.setData(articleService.getArticle(id));
+            responseData.setData(articleService.getArticle(unique+"/"+doi));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
@@ -213,16 +222,16 @@ public class ArticleController {
         }
     }
 
-    @GetMapping("/oai-pmh/dc/{id}/{start}/{until}")
+    @GetMapping("/oai-pmh/dc/{abbreviation}/{start}/{until}")
     @CircuitBreaker(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("id") UUID id, @PathVariable("start") String start, @PathVariable("until") String until){
+    public ResponseEntity<ResponseData<String>> getOaiDc(@PathVariable("abbreviation") String abbreviation, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
-            articleService.getOaiPmh(id, "oai_dc", start, until);
+            articleService.getOaiPmh(abbreviation, "oai_dc", start, until);
 
             responseData.setStatus(true);
-            responseData.getMessages().add( "Harvested journal with id " + id + " successfully");
+            responseData.getMessages().add( "Harvested journal with id " + abbreviation + " successfully");
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
             responseData.setStatus(true);
@@ -231,16 +240,16 @@ public class ArticleController {
         }
     }
 
-    @GetMapping("/oai-pmh/marc/{id}/{start}/{until}")
+    @GetMapping("/oai-pmh/marc/{abbreviation}/{start}/{until}")
     @CircuitBreaker(name = "journal")
     @Retry(name = "journal")
-    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("id") UUID id, @PathVariable("start") String start, @PathVariable("until") String until){
+    public ResponseEntity<ResponseData<String>> getOaiMarc(@PathVariable("abbreviation") String abbreviation, @PathVariable("start") String start, @PathVariable("until") String until){
         ResponseData<String> responseData = new ResponseData<>();
         try{
-            articleService.getOaiPmh(id, "oai_marc", start, until);
+            articleService.getOaiPmh(abbreviation, "oai_marc", start, until);
 
             responseData.setStatus(true);
-            responseData.getMessages().add( "Harvested journal with id " + id + " successfully");
+            responseData.getMessages().add( "Harvested journal with id " + abbreviation + " successfully");
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
             responseData.setStatus(true);
@@ -328,4 +337,67 @@ public class ArticleController {
             return ResponseEntity.status(e.getStatusCode()).body(responseData);
         }
     }
+
+    /**
+     *
+     * Export Citation
+     */
+    @GetMapping("/export-citation/{id}")
+    public ResponseEntity<byte[]> citationBibText(@PathVariable("id") String id) {
+        try {
+
+            String exportBib = articleService.citationBibText(id);
+
+            return ResponseEntity.ok().contentType(MediaType.valueOf("application/x-bibtex"))
+                    .contentLength(String.join("\n",
+                            exportBib).length())
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"citation.bib")
+                    .body(String.join("\n",
+                            exportBib).getBytes());
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(null);
+        }
+    }
+
+    /**
+     *
+     * Export Citation
+     */
+    @GetMapping("/citation/export")
+    public ResponseEntity<byte[]> multipleExport(@RequestParam(value = "count", required = true) int count) {
+        try {
+
+            List<String> exportBib = articleService.multipleCitationBibText(count);
+
+            return ResponseEntity.ok().contentType(MediaType.valueOf("application/x-bibtex"))
+                    .contentLength(String.join("\n",
+                            exportBib).length())
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"citation.bib")
+                    .body(String.join("\n",
+                            exportBib).getBytes());
+        } catch (CustomException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(null);
+        }
+    }
+
+    @GetMapping("/fullText/{id}")
+    public ResponseEntity<ResponseData<String>> citationCrossRef(@PathVariable("id") String id) {
+
+        ResponseData<String> responseData = new ResponseData<>();
+        try{
+
+            articleService.fullText(id);
+
+            responseData.setStatus(true);
+            responseData.setData(null);
+            responseData.getMessages().add("Get full text successfully");
+
+            return ResponseEntity.ok(responseData);
+        }catch (CustomException e){
+            responseData.setStatus(true);
+            responseData.getMessages().add(e.getMessage());
+            return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
 }

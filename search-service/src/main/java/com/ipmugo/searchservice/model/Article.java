@@ -32,7 +32,7 @@ public class Article {
     @Field(type = FieldType.Keyword)
     private String ojsId;
 
-    @Field(type = FieldType.Text, analyzer = "english")
+    @Field(type = FieldType.Keyword)
     private String title;
 
     @Field(type = FieldType.Keyword)
@@ -71,7 +71,7 @@ public class Article {
     private List<Keyword> keywords;
 
     @Field(type = FieldType.Nested, includeInParent = true)
-    private Set<Author> authors;
+    private List<Author> authors;
     @Field(type = FieldType.Keyword)
     private int citationByScopus;
     @Field(type = FieldType.Keyword)

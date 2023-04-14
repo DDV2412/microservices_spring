@@ -110,13 +110,13 @@ public class OaiDcType {
     protected List<JAXBElement<ElementType>> identifier;
 
     @XmlElementRef(name = "source", namespace = "http://purl.org/dc/elements/1.1/", type = JAXBElement.class, required = false)
-    protected JAXBElement<ElementType> source;
+    protected List<JAXBElement<ElementType>> source;
 
     @XmlElementRef(name = "language", namespace = "http://purl.org/dc/elements/1.1/", type = JAXBElement.class, required = false)
     protected JAXBElement<ElementType> language;
 
     @XmlElementRef(name = "relation", namespace = "http://purl.org/dc/elements/1.1/", type = JAXBElement.class, required = false)
-    protected JAXBElement<ElementType> relation;
+    protected List<JAXBElement<ElementType>> relation;
 
     @XmlElementRef(name = "coverage", namespace = "http://purl.org/dc/elements/1.1/", type = JAXBElement.class, required = false)
     protected JAXBElement<ElementType> coverage;

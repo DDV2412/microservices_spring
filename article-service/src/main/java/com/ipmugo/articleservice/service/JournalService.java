@@ -50,9 +50,9 @@ public class JournalService {
     /**
      * Get Journal By Id
      * */
-    public Journal getJournal(UUID id) throws CustomException {
+    public Journal getJournal(String abbreviation) throws CustomException {
         try{
-            Optional<Journal> journal = journalRepository.findById(id);
+            Optional<Journal> journal = journalRepository.findByAbbreviation(abbreviation);
 
             return journal.orElse(null);
 

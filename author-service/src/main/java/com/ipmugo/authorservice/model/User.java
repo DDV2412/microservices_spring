@@ -3,13 +3,14 @@ package com.ipmugo.authorservice.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name="userAssign")
-@Builder
 @Getter
 @Setter
+@Table(name="author")
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -37,9 +38,12 @@ public class User {
     @Column
     private String googleScholar;
 
-    @ManyToMany(mappedBy = "authorAssign", fetch = FetchType.EAGER)
-    private Set<Article> articles;
+    @Column
+    private String profile;
+
+    @ManyToMany(mappedBy = "authors", fetch = FetchType.EAGER)
+    private Set<Publication> publications = new HashSet<>();
 
     @Column
-    private int hIndex;
+    private String citation;
 }

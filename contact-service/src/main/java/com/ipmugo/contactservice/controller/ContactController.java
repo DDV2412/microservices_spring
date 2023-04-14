@@ -26,7 +26,7 @@ public class ContactController {
     private ContactService contactService;
 
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Contact>>> getAllContact(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size){
+    public ResponseEntity<ResponseData<Page<Contact>>> getAllContact(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size){
         ResponseData<Page<Contact>> responseData = new ResponseData<>();
         try{
             Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size));

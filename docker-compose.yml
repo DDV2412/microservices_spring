@@ -1,22 +1,5 @@
 version: '3.7'
 services:
-#  postgres-keycloak:
-#    container_name: postgres-keycloak
-#    image: postgres:latest
-#    environment:
-#      POSTGRES_ROOT: root
-#      POSTGRES_DB: postgres-keycloak
-#      POSTGRES_USER: ipmugo_admin
-#      POSTGRES_PASSWORD: ipmugo_admin
-#    volumes:
-#      - ./postgres-keycloak:/data/postgres
-#    expose:
-#      - '5431'
-#    ports:
-#      - '5431:5431'
-#    command: -p 5431
-#    restart: always
-
   postgres-media:
     container_name: postgres-media
     image: postgres:latest
@@ -68,6 +51,23 @@ services:
     command: -p 5434
     restart: always
 
+  postgres-author:
+    container_name: postgres-author
+    image: postgres:latest
+    environment:
+      POSTGRES_ROOT: root
+      POSTGRES_DB: postgres-author
+      POSTGRES_USER: ipmugo_admin
+      POSTGRES_PASSWORD: ipmugo_admin
+    volumes:
+      - ./postgres-author:/data/postgres
+    expose:
+      - '5435'
+    ports:
+      - '5435:5435'
+    command: -p 5435
+    restart: always
+
   postgres-subscribe:
     container_name: postgres-subscribe
     image: postgres:latest
@@ -102,23 +102,6 @@ services:
     command: -p 5437
     restart: always
 
-  postgres-author:
-    container_name: postgres-author
-    image: postgres:latest
-    environment:
-      POSTGRES_ROOT: root
-      POSTGRES_DB: postgres-author
-      POSTGRES_USER: ipmugo_admin
-      POSTGRES_PASSWORD: ipmugo_admin
-    volumes:
-      - ./postgres-author:/data/postgres
-    expose:
-      - '5435'
-    ports:
-      - '5435:5435'
-    command: -p 5435
-    restart: always
-
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
     container_name: elasticsearch
@@ -127,7 +110,8 @@ services:
       - cluster.name=search-cluster
       - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
+      - 'ES_JAVA_OPTS=-Xms256m -Xmx256m'
+      - xpack.ml.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -153,26 +137,6 @@ services:
       interval: 10s
       retries: 20
       test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:5601/api/status
-
-#  keycloak:
-#    container_name: keycloak
-#    image: quay.io/keycloak/keycloak:latest
-#    command: ['start-dev', '--import-realm']
-#    environment:
-#      DB_VENDOR: postgresql
-#      DB_ADDR: postgres
-#      DB_DATABASE: postgres_keycloak
-#      DB_USER: ipmugo_admin
-#      DB_PASSWORD: ipmugo_admin
-#      KEYCLOAK_ADMIN: ipmugo_admin
-#      KEYCLOAK_ADMIN_PASSWORD: ipmugo_admin
-#    ports:
-#      - '8080:8080'
-#    volumes:
-#      - ./realms/:/opt/jboss/keycloak/imports/
-#    restart: always
-#    depends_on:
-#      - postgres-keycloak
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -201,17 +165,11 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-  ## Zipkin
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: zipkin
-    restart: always
-    ports:
-      - '9411:9411'
 
   service-database:
     container_name: service-database
     image: mongo:4.2
+    command: mongod --nojournal
     restart: always
     ports:
       - '27017:27017'
@@ -219,35 +177,31 @@ services:
       - ./service-database:/data/db
 
   discovery-server:
-    image: dhyan2412/discovery-server:latest
+    image: dianputra24/discovery-server:latest
     container_name: discovery-server
     restart: always
     ports:
       - '8352:8352'
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - zipkin
 
   api-gateway:
-    image: dhyan2412/api-gateway:latest
+    image: dianputra24/api-gateway:latest
     container_name: api-gateway
     restart: always
     ports:
-      - '8080:8080'
+      - '8081:8080'
     expose:
-      - '8080'
+      - '8081'
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
     depends_on:
-      - zipkin
       - discovery-server
-#      - keycloak
 
   ## Journal Server
   journal-service:
-    image: dhyan2412/journal-service:latest
+    image: dianputra24/journal-service:latest
     container_name: journal-service
     restart: always
     environment:
@@ -257,31 +211,28 @@ services:
       - discovery-server
       - api-gateway
       - broker
-      - zipkin
 
   ## Media Server
   media-service:
-    image: dhyan2412/media-service:latest
+    image: dianputra24/media-service:latest
     container_name: media-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - IMAGE_ZONE=http://localhost
+      - IMAGE_ZONE=https://dev.ipmugo.com
     depends_on:
-      - zipkin
       - postgres-media
       - discovery-server
       - api-gateway
 
   ## Article Server
   article-service:
-    image: dhyan2412/article-service:latest
+    image: dianputra24/article-service:latest
     container_name: article-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - broker
       - api-gateway
       - service-database
@@ -289,26 +240,24 @@ services:
 
   ## User Server
   user-service:
-    image: dhyan2412/user-service:latest
+    image: dianputra24/user-service:latest
     container_name: user-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - postgres-user
       - discovery-server
       - api-gateway
 
   ## Search Server
   search-service:
-    image: dhyan2412/search-service:latest
+    image: dianputra24/search-service:latest
     container_name: search-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - elasticsearch
       - discovery-server
       - api-gateway
@@ -316,82 +265,50 @@ services:
 
   ## Author Server
   author-service:
-    image: dhyan2412/author-service:latest
+    image: dianputra24/author-service:latest
     container_name: author-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - api-gateway
-      - postgres-author
+      - service-database
       - discovery-server
       - broker
 
   ## Set Counter Server
   set-counter:
-    image: dhyan2412/set-counter:latest
+    image: dianputra24/set-counter:latest
     container_name: set-counter
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - api-gateway
       - service-database
       - discovery-server
       - broker
 
   contact-service:
-    image: dhyan2412/contact-service:latest
+    image: dianputra24/contact-service:latest
     container_name: contact-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - postgres-contact
       - discovery-server
       - api-gateway
 
   subscribe-service:
-    image: dhyan2412/subscribe-service:latest
+    image: dianputra24/subscribe-service:latest
     container_name: subscribe-service
     restart: always
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - zipkin
       - postgres-subscribe
       - discovery-server
       - api-gateway
-  ## Prometheus
-#  prometheus:
-#    image: prom/prometheus:latest
-#    container_name: prometheus
-#    restart: always
-#    ports:
-#      - '9090:9090'
-#    volumes:
-#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-#    depends_on:
-#      - article-service
-#      - journal-service
-#      - media-service
-#      - search-service
-#      - author-service
-#      - set-counter
-#
-#  grafana:
-#    image: grafana/grafana-oss:latest
-#    container_name: grafana
-#    restart: always
-#    ports:
-#      - '3001:3000'
-#    links:
-#      - prometheus:prometheus
-#    volumes:
-#      - ./grafana:/var/lib/grafana
-#    environment:
-#      - GF_SECURITY_ADMIN_USER=ipmugo_admin
-#      - GF_SECURITY_ADMIN_PASSWORD=ipmugo_admin
+
+

@@ -26,7 +26,7 @@ public class SubscribeController {
     private SubscribeService subscribeService;
 
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Subscribe>>> getAllSubscribe(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size){
+    public ResponseEntity<ResponseData<Page<Subscribe>>> getAllSubscribe(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size){
         ResponseData<Page<Subscribe>> responseData = new ResponseData<>();
         try{
             Pageable pageable = PageRequest.of(Integer.valueOf(page), Integer.valueOf(size));

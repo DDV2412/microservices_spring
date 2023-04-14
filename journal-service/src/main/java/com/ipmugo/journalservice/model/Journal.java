@@ -36,8 +36,11 @@ public class Journal {
     @Column(unique = true)
     private String abbreviation;
 
+
     @Column
-    private String thumbnail;
+    private String pageImage;
+    @Column
+    private String coverImage;
 
     @Column(columnDefinition = "TEXT")
     private String description;

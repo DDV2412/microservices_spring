@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
@@ -34,8 +34,8 @@ public class UserController {
      * Admin Create Account
      */
     @PostMapping("/user")
-    public ResponseEntity<ResponseData<UserResponse>> createUser(@Valid @RequestBody User userData, Errors errors){
-        ResponseData<UserResponse> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<String>> createUser(@Valid @RequestBody User userData, Errors errors){
+        ResponseData<String> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
             for (ObjectError error : errors.getAllErrors()){
@@ -51,7 +51,7 @@ public class UserController {
             User user = userService.createUser(userData);
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(user));
+            responseData.setData("Create new user successfully");
             return  ResponseEntity.ok(responseData);
 
         }catch (CustomException e){
@@ -66,8 +66,8 @@ public class UserController {
      * Admin Update Account
      */
     @PutMapping("/user/{id}")
-    public ResponseEntity<ResponseData<UserResponse>> updateUser(@PathVariable("id") UUID userId, @Valid @RequestBody User userData, Errors errors){
-        ResponseData<UserResponse> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<String>> updateUser(@PathVariable("id") UUID userId, @Valid @RequestBody User userData, Errors errors){
+        ResponseData<String> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
             for (ObjectError error : errors.getAllErrors()){
@@ -83,7 +83,7 @@ public class UserController {
             User user = userService.updateUser(userId, userData);
 
             responseData.setStatus(true);
-            responseData.setData(new UserResponse().getBuilder(user));
+            responseData.setData("Update user id " + userId+ " successfully");
             return  ResponseEntity.ok(responseData);
 
         }catch (CustomException e){
@@ -164,7 +164,7 @@ public class UserController {
      * Admin Get All Account
      */
     @GetMapping("/user")
-    public ResponseEntity<ResponseData<Page<User>>> getAllUser(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search){
+    public ResponseEntity<ResponseData<Page<User>>> getAllUser(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size, @RequestParam(value = "search", required = false) String search){
         ResponseData<Page<User>> responseData = new ResponseData<>();
 
         try{
@@ -218,6 +218,26 @@ public class UserController {
             responseData.setData(null);
             responseData.setStatus(false);
             return ResponseEntity.status(e.getStatusCode()).body(responseData);
+        }
+    }
+
+    @GetMapping("/scholar/{id}")
+    public ResponseEntity<ResponseData<String>> scholar(@PathVariable("id") UUID id) {
+        ResponseData<String> responseData = new ResponseData<>();
+
+        try {
+            userService.asyncScholar(id);
+
+            responseData.setStatus(true);
+            responseData.setData("Scholar profile successfully sync");
+
+            return ResponseEntity.ok(responseData);
+
+        } catch (Exception e) {
+            responseData.setStatus(false);
+            responseData.getMessages().add(e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(responseData);
         }
     }
 }

@@ -1,5 +1,6 @@
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\service\ArticleService.java
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\JournalEvent.java
+F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\event\UpdateCounter.java
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\service\AuthorService.java
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\controller\ArticleController.java
 F:\Project\MICROSERVICE\ipmugo-microservice\search-service\src\main\java\com\ipmugo\searchservice\utils\CustomException.java

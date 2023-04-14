@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/mail-service","imageId":"sha256:69dd0c4fda5d4c5c0ebc3dadbd7dff1d0f9c3d9feebbd105a4ddb05b560dbc26","imageDigest":"sha256:d3479b7cb881f4984615470b0f43c24cfd12604ff8fe0d80499d9a6e284a1df8","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/mail-service","imageId":"sha256:81dae643ce54e94a37e1263d2bd81ceca70a19e86b1f56f9725406c7e5b55987","imageDigest":"sha256:5de30b9f5953419eeda2662a2d258e937069789b88a5af67dc0f038c62c9b88b","tags":["latest"],"imagePushed":true}

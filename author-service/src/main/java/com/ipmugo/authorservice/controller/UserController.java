@@ -1,8 +1,7 @@
 package com.ipmugo.authorservice.controller;
 
-import com.ipmugo.authorservice.dto.AssignRequest;
 import com.ipmugo.authorservice.dto.ResponseData;
-import com.ipmugo.authorservice.model.Article;
+import com.ipmugo.authorservice.model.Publication;
 import com.ipmugo.authorservice.model.User;
 import com.ipmugo.authorservice.service.UserService;
 import com.ipmugo.authorservice.utils.CustomException;
@@ -11,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -23,14 +21,13 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/assign")
-    public ResponseEntity<ResponseData<String>> assignAuthor(@RequestBody AssignRequest data){
-        ResponseData<String> responseData = new ResponseData<>();
+    @PostMapping("/assign")
+    public ResponseEntity<ResponseData<User>> assignAuthor(@RequestBody User data){
+        ResponseData<User> responseData = new ResponseData<>();
         try{
-            userService.assignArticle(data.getUser(), data.getArticle());
 
-            responseData.getMessages().add("Assigned author successfully");
             responseData.setStatus(true);
+            responseData.setData(userService.assignArticle(data));
 
             return ResponseEntity.ok(responseData);
         }catch (CustomException e){
@@ -42,8 +39,8 @@ public class UserController {
     }
 
     @GetMapping("/publications/{id}")
-    public ResponseEntity<ResponseData<Iterable<Article>>> authorPublication(@PathVariable("id") String id){
-        ResponseData<Iterable<Article>> responseData = new ResponseData<>();
+    public ResponseEntity<ResponseData<Iterable<Publication>>> authorPublication(@PathVariable("id") String id){
+        ResponseData<Iterable<Publication>> responseData = new ResponseData<>();
         try{
             responseData.setData(userService.getPublications(id));
             responseData.setStatus(true);

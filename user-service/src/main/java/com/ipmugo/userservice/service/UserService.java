@@ -1,16 +1,20 @@
 package com.ipmugo.userservice.service;
 
 import com.ipmugo.userservice.dto.*;
-import com.ipmugo.userservice.event.AuthorAssignEvent;
-import com.ipmugo.userservice.model.UserRole;
+import com.ipmugo.userservice.model.*;
+import com.ipmugo.userservice.repository.AuthorScholarMetricRepository;
+import com.ipmugo.userservice.repository.AuthorScholarProfileRepository;
 import com.ipmugo.userservice.utils.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.ipmugo.userservice.model.Role;
-import com.ipmugo.userservice.model.User;
 import com.ipmugo.userservice.repository.RoleRepository;
 import com.ipmugo.userservice.repository.UserRepository;
 import com.ipmugo.userservice.utils.CustomException;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +39,12 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private AuthorScholarMetricRepository authorScholarMetricRepository;
+
+    @Autowired
+    private AuthorScholarProfileRepository authorScholarProfileRepository;
+
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -390,6 +400,80 @@ public class UserService implements UserDetailsService {
                     .retrieve().
                     bodyToMono(String.class).
                     block();
+
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+
+    /**
+     * Async Google Scholar
+     * */
+    public  void asyncScholar(UUID id) throws CustomException{
+        try{
+            User user = this.getUser(id);
+
+            if(user.getGoogleScholar() == null){
+                throw new CustomException("User with id "+ id + " not found", HttpStatus.BAD_GATEWAY);
+            }
+
+            Connection.Response response = Jsoup.connect(
+                            user.getGoogleScholar())
+                    .timeout(0)
+                    .execute();
+
+            Document document = Jsoup.connect(
+                            user.getGoogleScholar())
+                    .timeout(0)
+                    .get();
+
+           if(response.statusCode() != 200){
+               throw new CustomException("Connection loss", HttpStatus.BAD_GATEWAY);
+           }
+
+           List<Element> citation = document.getElementsByClass("gsc_rsb_std");
+
+            Element profile = document.getElementById("gsc_prf_pu");
+
+            if (profile != null) {
+                profile = profile.select("img[src~=(?i)]").first();
+            }
+
+            if (profile != null) {
+                user.setPhotoProfile(profile.attr("src"));
+                userRepository.save(user);
+            }
+
+            ScholarProfile scholarProfile = ScholarProfile.builder()
+                    .user(user)
+                    .citations(Integer.valueOf(citation.get(0).text()))
+                    .hIndex(Integer.valueOf(citation.get(2).text()))
+                    .i10Index(Integer.valueOf(citation.get(4).text()))
+                    .build();
+
+            authorScholarProfileRepository.save(scholarProfile);
+
+            Element statistic = document.getElementsByClass("gsc_md_hist_b").first();
+
+            if (statistic != null) {
+                Elements years = statistic.getElementsByClass("gsc_g_a");
+                Elements counts = statistic.getElementsByClass("gsc_g_t");
+
+                for (int x = 0; x < years.size(); x++) {
+                    Element year = years.get(x);
+                    Element count = counts.get(x);
+
+                    ScholarMetric scholarMetric = ScholarMetric.builder()
+                            .user(user)
+                            .year(year.text())
+                            .counts(Integer.valueOf(count.text()))
+                            .build();
+
+                    authorScholarMetricRepository.save(scholarMetric);
+                }
+            }
+
 
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);

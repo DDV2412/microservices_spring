@@ -263,7 +263,7 @@ public class MediaController {
     }
 
     @GetMapping("/upload/view/images")
-    public ResponseEntity<ResponseData<Page<Image>>> getAllImage(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size) {
+    public ResponseEntity<ResponseData<Page<Image>>> getAllImage(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size) {
         ResponseData<Page<Image>> responseData = new ResponseData<>();
 
         try{
@@ -281,7 +281,7 @@ public class MediaController {
     }
 
     @GetMapping("/upload/view/documents")
-    public ResponseEntity<ResponseData<Page<Document>>> getAllDocuments(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size) {
+    public ResponseEntity<ResponseData<Page<Document>>> getAllDocuments(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size) {
         ResponseData<Page<Document>> responseData = new ResponseData<>();
 
         try{

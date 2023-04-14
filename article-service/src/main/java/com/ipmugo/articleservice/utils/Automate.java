@@ -28,7 +28,7 @@ public class Automate {
     @Autowired
     private JournalService journalService;
 
-    @Scheduled(cron = "0 0 0 22 * *", zone = "GMT+7")
+    @Scheduled(cron = "0 0 0 18 * *", zone = "GMT+7")
     public void syncronizedCitationScopus () {
         Pageable pageable = PageRequest.of(0, 25);
 
@@ -54,7 +54,7 @@ public class Automate {
         }while (true);
     }
 
-    @Scheduled(cron = "0 0 0 23 * *", zone = "GMT+7")
+    @Scheduled(cron = "0 0 0 16 * *", zone = "GMT+7")
     public void syncronizedCitationCrossRef () {
         Pageable pageable = PageRequest.of(0, 25);
 
@@ -79,7 +79,7 @@ public class Automate {
         }while (true);
     }
 
-    @Scheduled(cron = "0 0 0 20 * *", zone = "GMT+7")
+    @Scheduled(cron = "0 0 0 15 * *", zone = "GMT+7")
     public void continueHarvesting () {
         Pageable pageable = PageRequest.of(0, 25);
 
@@ -99,7 +99,7 @@ public class Automate {
 
             for(Journal journal: journals.getContent()){
                 try{
-                    articleService.getOaiPmh(journal.getId(), "oai_dc", startDate, untilDate);
+                    articleService.getOaiPmh(journal.getAbbreviation(), "oai_dc", startDate, untilDate);
                 }catch (Exception e){
                     continue;
                 }

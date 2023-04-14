@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/discovery-server","imageId":"sha256:a1fcfe7b6ceebfb1ad1db92ca4527483f39f11784f6ac304c0f2ab9b1ca53deb","imageDigest":"sha256:f70861cfce53260d6393d4589210c324d6cfed0607351981d321216cd97afc96","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/discovery-server","imageId":"sha256:473a4923e324fdf32a5dbf1d98cf610d99f648dcf350a1c169648c440c317535","imageDigest":"sha256:f1e2a25e9bc7e4a1632213cc6bc23b0e39bccaf628edabd54068f61eb95fef1b","tags":["latest"],"imagePushed":true}

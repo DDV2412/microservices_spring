@@ -23,7 +23,7 @@ public class SetCounter {
     private String id;
 
     @Field
-    private String articleId;
+    private String doi;
     @Field
     private Status status;
 

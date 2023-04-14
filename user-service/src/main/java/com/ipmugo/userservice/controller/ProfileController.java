@@ -13,13 +13,11 @@ import com.ipmugo.userservice.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -40,7 +38,7 @@ public class ProfileController {
      * Get Profile
      */
     @GetMapping("/profile")
-    public ResponseEntity<ResponseData<UserResponse>> getProfile(@RequestHeader("accessToken") String token) {
+    public ResponseEntity<ResponseData<UserResponse>> getProfile(@RequestHeader("Authorization") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
         try {
@@ -81,7 +79,7 @@ public class ProfileController {
      * Update Profile
      */
     @PutMapping("/profile/update")
-    public ResponseEntity<ResponseData<UserResponse>> updateProfile(@Valid @RequestBody ProfileUpdate user, Errors errors, @RequestHeader("accessToken") String token) {
+    public ResponseEntity<ResponseData<UserResponse>> updateProfile(@Valid @RequestBody ProfileUpdate user, Errors errors, @RequestHeader("Authorization") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
@@ -131,7 +129,7 @@ public class ProfileController {
      * Update Password
      */
     @PutMapping("/password/update")
-    public ResponseEntity<ResponseData<UserResponse>> updatePassword(@Valid @RequestBody PasswordRequest passwordRequest, Errors errors, @RequestHeader("accessToken") String token) {
+    public ResponseEntity<ResponseData<UserResponse>> updatePassword(@Valid @RequestBody PasswordRequest passwordRequest, Errors errors, @RequestHeader("Authorization") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
         if (errors.hasErrors()) {
@@ -183,7 +181,7 @@ public class ProfileController {
      */
 
     @DeleteMapping("/profile/delete")
-    public ResponseEntity<ResponseData<UserResponse>> deleteAccount(@RequestHeader("accessToken") String token) {
+    public ResponseEntity<ResponseData<UserResponse>> deleteAccount(@RequestHeader("Authorization") String token) {
         ResponseData<UserResponse> responseData = new ResponseData<>();
 
 
@@ -217,6 +215,46 @@ public class ProfileController {
             responseData.getMessages().add(e.getMessage());
 
             return ResponseEntity.internalServerError().body(responseData);
+        }
+    }
+
+    @GetMapping("/scholar")
+    public ResponseEntity<ResponseData<String>> scholar(@RequestHeader("Authorization") String token) {
+        ResponseData<String> responseData = new ResponseData<>();
+
+        try {
+            /**
+             * Parsing JWT Token
+             * Bearer and Token
+             * */
+            String jwt = jwtUtils.parseJwt(token);
+
+            /**
+             * Checking token not null and token valid
+             * */
+            if (jwt == null || !jwtUtils.validateJwtToken(jwt)) {
+                responseData.setStatus(false);
+                responseData.getMessages().add(String.format("Invalid JWT signature " + jwt));
+
+                return ResponseEntity.internalServerError().body(responseData);
+            }
+
+            String username = jwtUtils.getUserNameFromJwtToken(jwt);
+
+            User profile = userService.getProfile(username);
+
+            userService.asyncScholar(profile.getId());
+
+            responseData.setStatus(true);
+            responseData.setData("Scholar profile successfully sync");
+
+            return ResponseEntity.ok(responseData);
+
+        } catch (Exception e) {
+            responseData.setStatus(false);
+            responseData.getMessages().add(e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseData);
         }
     }
 }

@@ -49,7 +49,8 @@ public class JournalService {
                     .issn(journalRequest.getIssn())
                     .e_issn(journalRequest.getE_issn())
                     .abbreviation(journalRequest.getAbbreviation())
-                    .thumbnail(journalRequest.getThumbnail())
+                    .pageImage(journalRequest.getPageImage())
+                    .coverImage(journalRequest.getCoverImage())
                     .description(journalRequest.getDescription())
                     .publisher(journalRequest.getPublisher())
                     .journalSite(journalRequest.getJournalSite())
@@ -99,35 +100,41 @@ public class JournalService {
      * */
     public Journal updateJournal(UUID id, JournalRequest journalRequest) throws CustomException {
         try{
-            Journal journal = this.getJournal(id);
+            Optional<Journal> journal = journalRepository.findById(id);
 
-            journal.setName(journalRequest.getName());
-            journal.setIssn(journalRequest.getIssn());
-            journal.setE_issn(journalRequest.getE_issn());
-            journal.setAbbreviation(journalRequest.getAbbreviation());
-            journal.setThumbnail(journalRequest.getThumbnail());
-            journal.setDescription(journalRequest.getDescription());
-            journal.setPublisher(journalRequest.getPublisher());
-            journal.setJournalSite(journalRequest.getJournalSite());
-            journal.setCountry(journalRequest.getCountry());
-            journal.setFocusScope(journalRequest.getFocusScope());
-            journal.setAuthorGuidelines(journalRequest.getAuthorGuidelines());
-            journal.setPrivacyStatement(journalRequest.getPrivacyStatement());
-            journal.setAuthorFees(journalRequest.getAuthorFees());
-            journal.setReviewPolice(journalRequest.getReviewPolice());
-            journal.setLicense(journalRequest.getLicense());
+            if (journal.isEmpty()) {
+                throw new CustomException("Journal with " + id +" not found", HttpStatus.NOT_FOUND);
+            }
+
+
+            journal.get().setName(journalRequest.getName());
+            journal.get().setIssn(journalRequest.getIssn());
+            journal.get().setE_issn(journalRequest.getE_issn());
+            journal.get().setAbbreviation(journalRequest.getAbbreviation());
+            journal.get().setPageImage(journalRequest.getPageImage());
+            journal.get().setCoverImage(journalRequest.getCoverImage());
+            journal.get().setDescription(journalRequest.getDescription());
+            journal.get().setPublisher(journalRequest.getPublisher());
+            journal.get().setJournalSite(journalRequest.getJournalSite());
+            journal.get().setCountry(journalRequest.getCountry());
+            journal.get().setFocusScope(journalRequest.getFocusScope());
+            journal.get().setAuthorGuidelines(journalRequest.getAuthorGuidelines());
+            journal.get().setPrivacyStatement(journalRequest.getPrivacyStatement());
+            journal.get().setAuthorFees(journalRequest.getAuthorFees());
+            journal.get().setReviewPolice(journalRequest.getReviewPolice());
+            journal.get().setLicense(journalRequest.getLicense());
 
 
             kafkaTemplate.send("journal", JournalEvent.builder()
-                    .id(journal.getId())
-                    .name(journal.getName())
-                    .issn(journal.getIssn())
-                    .e_issn(journal.getE_issn())
-                    .publisher(journal.getPublisher())
-                    .abbreviation(journal.getAbbreviation())
-                    .journalSite(journal.getJournalSite())
+                    .id(journal.get().getId())
+                    .name(journal.get().getName())
+                    .issn(journal.get().getIssn())
+                    .e_issn(journal.get().getE_issn())
+                    .publisher(journal.get().getPublisher())
+                    .abbreviation(journal.get().getAbbreviation())
+                    .journalSite(journal.get().getJournalSite())
                     .build());
-            return journalRepository.save(journal);
+            return journalRepository.save(journal.get());
 
         }catch (Exception e) {
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
@@ -137,11 +144,11 @@ public class JournalService {
     /**
      * Get Journal By ID
      * */
-    public Journal getJournal(UUID id) throws CustomException {
+    public Journal getJournal(String abbreviation) throws CustomException {
         try{
-            Optional<Journal> journal = journalRepository.findById(id);
+            Optional<Journal> journal = journalRepository.findByAbbreviation(abbreviation);
             if (journal.isEmpty()) {
-                throw new CustomException("Journal with " + id +" not found", HttpStatus.NOT_FOUND);
+                throw new CustomException("Journal with " + abbreviation +" not found", HttpStatus.NOT_FOUND);
             }
             return journal.get();
         }catch (Exception e){
@@ -167,7 +174,7 @@ public class JournalService {
     public void deleteJournal(UUID id) throws CustomException {
         try{
 
-            this.getJournal(id);
+
 
             journalRepository.deleteById(id);
 
@@ -181,11 +188,15 @@ public class JournalService {
      * */
     public Journal assignCategory(UUID id, List<Category> category) throws CustomException{
         try{
-            Journal journal = this.getJournal(id);
+            Optional<Journal> journal = journalRepository.findById(id);
 
-            journal.getCategoriesList().addAll(category);
+            if (journal.isEmpty()) {
+                throw new CustomException("Journal with " + id +" not found", HttpStatus.NOT_FOUND);
+            }
 
-            return journalRepository.save(journal);
+            journal.get().getCategoriesList().addAll(category);
+
+            return journalRepository.save(journal.get());
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }

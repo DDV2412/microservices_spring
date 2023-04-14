@@ -3,6 +3,7 @@ com\ipmugo\searchservice\repository\KeywordRepository.class
 com\ipmugo\searchservice\model\Author.class
 com\ipmugo\searchservice\model\Keyword$KeywordBuilder.class
 com\ipmugo\searchservice\event\AuthorEvent$AuthorEventBuilder.class
+com\ipmugo\searchservice\event\UpdateCounter$UpdateCounterBuilder.class
 com\ipmugo\searchservice\dto\ResponseData$ResponseDataBuilder.class
 com\ipmugo\searchservice\model\Article$ArticleBuilder.class
 com\ipmugo\searchservice\repository\ArticleRepository.class
@@ -23,6 +24,7 @@ com\ipmugo\searchservice\SearchSearchApplication.class
 com\ipmugo\searchservice\model\Journal.class
 com\ipmugo\searchservice\dto\ResponseData.class
 com\ipmugo\searchservice\event\JournalEvent$JournalEventBuilder.class
+com\ipmugo\searchservice\event\UpdateCounter.class
 com\ipmugo\searchservice\model\Keyword.class
 com\ipmugo\searchservice\model\Journal$JournalBuilder.class
 com\ipmugo\searchservice\event\KeywordEvent$KeywordEventBuilder.class

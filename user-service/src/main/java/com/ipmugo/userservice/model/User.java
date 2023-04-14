@@ -83,11 +83,11 @@ public class User implements UserDetails {
     @Column
     private boolean isEnabled;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private AuthorScholarMetric authorScholarMetric;
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<ScholarMetric> scholarMetrics;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private AuthorScholarProfile authorScholarProfile;
+    private ScholarProfile scholarProfile;
 
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     private Set<Role> roles;

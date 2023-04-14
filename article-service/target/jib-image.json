@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/article-service","imageId":"sha256:0fecd8094f9af3a380470797cf750e80ba5b48f6f461e8f725c3fd10b066be00","imageDigest":"sha256:8e479d6cd4ca7046fca29170355d12d6712fac405ddd929a6a2433ca007e54dc","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/article-service","imageId":"sha256:07c762fb8fd6758b5f92af362ffc3a079420e963becaaa323340c99de273e8ac","imageDigest":"sha256:76a15e98f87106cf2927890da29de6594e619f5ee854318423f932809dd1fab5","tags":["latest"],"imagePushed":true}

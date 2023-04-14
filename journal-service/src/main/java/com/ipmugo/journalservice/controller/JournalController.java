@@ -98,14 +98,14 @@ public class JournalController {
      * Get List Journal
      * */
     @GetMapping
-    public ResponseEntity<ResponseData<Page<Journal>>> getAllJournals(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "25", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
+    public ResponseEntity<ResponseData<Page<Journal>>> getAllJournals(@RequestParam(value = "page", defaultValue = "0", required = false) String page, @RequestParam(value = "size", defaultValue = "30", required = false) String size, @RequestParam(value = "search", required = false) String search, @RequestParam(name = "sort", required = false) String sort) {
         ResponseData<Page<Journal>> responseData = new ResponseData<>();
 
         try{
             Sort sortBy = Sort.by(Sort.Direction.DESC, "createdAt");
 
             if (sort != null && !sort.isEmpty()) {
-                String[] sortParams = sort.split(",");
+                String[] sortParams = sort.split(":");
                 String field = sortParams[0];
                 Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
                 sortBy = Sort.by(direction, field);
@@ -125,24 +125,10 @@ public class JournalController {
     }
 
     /**
-     * Get Journal By ID
+     * Get Journal By abbreviation
      * */
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseData<Journal>> getJournal(@PathVariable("id") UUID id) {
-        ResponseData<Journal> responseData = new ResponseData<>();
-        try{
-            responseData.setStatus(true);
-            responseData.setData(journalService.getJournal(id));
 
-            return ResponseEntity.ok(responseData);
-        }catch (CustomException e){
-            responseData.setStatus(true);
-            responseData.getMessages().add(e.getMessage());
-            return ResponseEntity.status(e.getStatusCode()).body(responseData);
-        }
-    }
-
-    @GetMapping("/abbreviation/{abbreviation}")
+    @GetMapping("/{abbreviation}")
     public ResponseEntity<ResponseData<Journal>> getJournal(@PathVariable("abbreviation") String abbreviation) {
         ResponseData<Journal> responseData = new ResponseData<>();
         try{

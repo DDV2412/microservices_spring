@@ -1,6 +1,7 @@
 com\ipmugo\articleservice\dto\ArticleRequest$ArticleRequestBuilder.class
 com\ipmugo\articleservice\schema\openarchives\oai\oai_dc\OaiDcType.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\GetRecordType.class
+com\ipmugo\articleservice\event\UpdateCounter.class
 com\ipmugo\articleservice\event\AuthorEvent$AuthorEventBuilder.class
 com\ipmugo\articleservice\model\Keyword$KeywordBuilder.class
 com\ipmugo\articleservice\dto\EntryCrossRef.class
@@ -42,6 +43,7 @@ com\ipmugo\articleservice\schema\openarchives\oai\pmh\ListRecordsType.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\ObjectFactory.class
 com\ipmugo\articleservice\utils\CustomException.class
 com\ipmugo\articleservice\schema\openarchives\oai\oai_dc\ObjectFactory.class
+com\ipmugo\articleservice\model\Status.class
 com\ipmugo\articleservice\repository\ArticleRepository.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\OAIPMHerrorcodeType.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\ResumptionTokenType.class
@@ -54,11 +56,13 @@ com\ipmugo\articleservice\schema\openarchives\oai\pmh\HeaderType.class
 com\ipmugo\articleservice\utils\Automate.class
 com\ipmugo\articleservice\config\WebClientConfig.class
 com\ipmugo\articleservice\dto\EntryScopus.class
+com\ipmugo\articleservice\event\UpdateCounter$UpdateCounterBuilder.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\ListSetsType.class
 com\ipmugo\articleservice\schema\purl\dc\elements\package-info.class
 com\ipmugo\articleservice\event\JournalEvent.class
 com\ipmugo\articleservice\dto\CitationCrossRef.class
 com\ipmugo\articleservice\schema\openarchives\oai\oai_marc\Varfield.class
+com\ipmugo\articleservice\event\SetCounterEvent$SetCounterEventBuilder.class
 com\ipmugo\articleservice\event\AuthorEvent.class
 com\ipmugo\articleservice\schema\openarchives\oai\oai_marc\OaiMarc.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\RequestType.class
@@ -74,3 +78,4 @@ com\ipmugo\articleservice\schema\openarchives\oai\pmh\DescriptionType.class
 com\ipmugo\articleservice\dto\CitationScopus.class
 com\ipmugo\articleservice\dto\ResponseJournalService$ResponseJournalServiceBuilder.class
 com\ipmugo\articleservice\schema\openarchives\oai\pmh\GranularityType.class
+com\ipmugo\articleservice\event\SetCounterEvent.class

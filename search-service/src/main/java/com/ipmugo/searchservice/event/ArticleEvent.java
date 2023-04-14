@@ -61,7 +61,7 @@ public class ArticleEvent {
     private List<KeywordEvent> keywords;
 
 
-    private Set<AuthorEvent> authors;
+    private List<AuthorEvent> authors;
 
     private int citationByScopus;
 

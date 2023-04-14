@@ -12,8 +12,8 @@ public interface ArticleRepository extends MongoRepository<Article, String> {
 
     Page<Article> findAll(Pageable pageable);
 
-    @Query("SELECT a FROM Article a WHERE a.title LIKE %:searchTerm% OR a.doi LIKE %:searchTerm% OR a.abstractText LIKE %:searchTerm%")
-    Page<Article> searchTerm(Pageable pageable, String searchTerm);
+    @Query("{$text: {$search: ?0}}")
+    Page<Article> searchTerm(String searchTerm, Pageable pageable);
 
     Iterable<Article> findByJournalId(String journalId);
 
@@ -23,7 +23,7 @@ public interface ArticleRepository extends MongoRepository<Article, String> {
 
     Iterable<Article> findByJournalIdOrderByIssueDescPublishDateDesc(String journalId);
 
-    Iterable<Article> findTop4ByOrderByCitationByScopusDescCitationByCrossRefDesc();
+    Iterable<Article> findTop3ByOrderByCitationByScopusDescCitationByCrossRefDesc();
 
 
 }

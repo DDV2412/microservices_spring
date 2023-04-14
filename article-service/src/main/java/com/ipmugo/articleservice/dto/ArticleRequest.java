@@ -18,7 +18,7 @@ import java.util.UUID;
 @Builder
 public class ArticleRequest {
     @NotNull
-    private UUID journalId;
+    private String journalAbbreviation;
 
 
     @NotBlank(message = "Abstract must not be blank")

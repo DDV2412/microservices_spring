@@ -1,5 +1,7 @@
 package com.ipmugo.userservice.dto;
 
+import com.ipmugo.userservice.model.ScholarMetric;
+import com.ipmugo.userservice.model.ScholarProfile;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,8 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +51,12 @@ public class UserResponse implements UserDetails {
     private String photoProfile;
 
     private List<String> interests;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<ScholarMetric> scholarMetrics;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private ScholarProfile scholarProfile;
 
     @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
@@ -96,6 +103,8 @@ public class UserResponse implements UserDetails {
                 .roles(user.getRoles())
                 .isEnabled(user.isEnabled())
                 .photoProfile(user.getPhotoProfile())
+                .scholarMetrics(user.getScholarMetrics())
+                .scholarProfile(user.getScholarProfile())
                 .build();
     }
 }

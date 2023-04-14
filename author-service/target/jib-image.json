@@ -1,1 +1,1 @@
-{"image":"registry.hub.docker.com/dhyan2412/author-service","imageId":"sha256:e9bb8dc36199b36c78a72f6a4ffdb0a5972ccb59ca5f19e4470a0e833594487c","imageDigest":"sha256:f8a7135855e2dbb71b1625ff509f56583e0141bc24eca84645f3f3cdf2c804a3","tags":["latest"],"imagePushed":true}
+{"image":"registry.hub.docker.com/dianputra24/author-service","imageId":"sha256:a605d94efead44c6f1f3ade1fdecb5d19f4f828361073fbe6affc9b3ec39cdc9","imageDigest":"sha256:fb619c4f084cbd351a88312beb2f8eb462f229b565a2675f8737e2b3887459eb","tags":["latest"],"imagePushed":true}

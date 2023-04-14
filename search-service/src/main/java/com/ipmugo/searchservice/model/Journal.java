@@ -22,6 +22,7 @@ public class Journal {
 
     @Id
     private String id;
+
     @Field(type = FieldType.Keyword)
     private String name;
     @Field(type = FieldType.Keyword)

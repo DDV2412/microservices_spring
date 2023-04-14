@@ -1,5 +1,19 @@
 package com.ipmugo.articleservice.service;
 
+import com.ipmugo.articleservice.repository.AuthorRepository;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.jbibtex.BibTeXDatabase;
+import org.jbibtex.BibTeXEntry;
+import org.jbibtex.BibTeXFormatter;
+import org.jbibtex.Key;
+import org.jbibtex.StringValue;
 import com.ipmugo.articleservice.dto.*;
 import com.ipmugo.articleservice.event.*;
 import com.ipmugo.articleservice.model.*;
@@ -20,13 +34,13 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.w3c.dom.Element;
@@ -36,9 +50,14 @@ import javax.net.ssl.SSLException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
+
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +65,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @Slf4j
 public class ArticleService {
+    private final AuthorRepository authorRepository;
 
     @Autowired
     private ArticleRepository articleRepository;
@@ -71,23 +91,26 @@ public class ArticleService {
     @Autowired
     private KafkaTemplate<String, ArticleEvent> kafkaTemplate;
 
+    @Autowired
+    private KafkaTemplate<String, UpdateCounter> kafkaUpdate;
     /**
      * Save Article
      * */
+    @Async
     public Article createArticle(ArticleRequest articleRequest) throws CustomException {
         try{
 
-            Journal journal = journalService.getJournal(articleRequest.getJournalId());
+            Journal journal = journalService.getJournal(articleRequest.getJournalAbbreviation());
 
             if(journal == null){
                 ResponseJournalService journalRequest = webClientBuilder.build().get()
-                        .uri("http://journal-service/api/journal/"+ articleRequest.getJournalId())
+                        .uri("http://journal-service/api/journal/"+ articleRequest.getJournalAbbreviation())
                         .retrieve()
                         .bodyToMono(ResponseJournalService.class)
                         .block();
 
                 if(journalRequest == null){
-                    throw new CustomException("Journal with id " + articleRequest.getJournalId() + " not found", HttpStatus.NOT_FOUND);
+                    throw new CustomException("Journal with id " + articleRequest.getJournalAbbreviation() + " not found", HttpStatus.NOT_FOUND);
                 }
 
                 Journal journalBuilder = Journal.builder()
@@ -212,21 +235,22 @@ public class ArticleService {
     /**
      * Update Article
      * */
+    @Async
     public Article updateArticle(String id, ArticleRequest articleRequest) throws CustomException {
         try{
             Article article = this.getArticle(id);
 
-            Journal journal = journalService.getJournal(articleRequest.getJournalId());
+            Journal journal = journalService.getJournal(articleRequest.getJournalAbbreviation());
 
             if(journal == null){
                 ResponseJournalService journalRequest = webClientBuilder.build().get()
-                        .uri("http://journal-service/api/journal/"+ articleRequest.getJournalId())
+                        .uri("http://journal-service/api/journal/"+ articleRequest.getJournalAbbreviation())
                         .retrieve()
                         .bodyToMono(ResponseJournalService.class)
                         .block();
 
                 if(journalRequest == null){
-                    throw new CustomException("Journal with id " + articleRequest.getJournalId() + " not found", HttpStatus.NOT_FOUND);
+                    throw new CustomException("Journal with " + articleRequest.getJournalAbbreviation() + " not found", HttpStatus.NOT_FOUND);
                 }
 
                 Journal journalBuilder = Journal.builder()
@@ -351,8 +375,7 @@ public class ArticleService {
             if(searchTerm == null || StringUtils.isBlank(searchTerm)){
                 return articleRepository.findAll(pageable);
             }
-
-            return articleRepository.searchTerm(pageable, searchTerm);
+            return articleRepository.searchTerm(searchTerm, pageable);
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -361,12 +384,12 @@ public class ArticleService {
     /**
      * Get Article by ID
      * */
-    public Article getArticle(String id) throws CustomException{
+    public Article getArticle(String doi) throws CustomException{
         try {
-            Optional<Article> article = articleRepository.findById(id);
+            Optional<Article> article = articleRepository.findByDoi(doi);
 
             if (article.isEmpty()) {
-                throw new CustomException("Article with " + id +" not found", HttpStatus.NOT_FOUND);
+                throw new CustomException("Article with " + doi +" not found", HttpStatus.NOT_FOUND);
             }
             return article.get();
 
@@ -380,7 +403,6 @@ public class ArticleService {
      * */
     public void deleteArticle(String id)throws CustomException{
         try{
-            this.getArticle(id);
 
             articleRepository.deleteById(id);
 
@@ -406,20 +428,21 @@ public class ArticleService {
      * Multiple Method
      * Protocol AOI DC
      */
-    public void getOaiPmh(UUID id, String protocolType, String startDate, String untilDate) throws CustomException {
+    @Async
+    public void getOaiPmh(String abbreviation, String protocolType, String startDate, String untilDate) throws CustomException {
        try{
 
-           Journal journal = journalService.getJournal(id);
+           Journal journal = journalService.getJournal(abbreviation);
 
            if(journal == null){
                ResponseJournalService journalRequest = webClientBuilder.build().get()
-                       .uri("http://journal-service/api/journal/"+id)
+                       .uri("http://journal-service/api/journal/"+abbreviation)
                        .retrieve()
                        .bodyToMono(ResponseJournalService.class)
                        .block();
 
                if(journalRequest == null || journalRequest.getData() == null){
-                   throw new CustomException("Journal with id " + id + " not found", HttpStatus.NOT_FOUND);
+                   throw new CustomException("Journal with " + abbreviation + " not found", HttpStatus.NOT_FOUND);
                }
 
                Journal journalBuilder = Journal.builder()
@@ -462,7 +485,7 @@ public class ArticleService {
                    .uri("?verb=ListRecords&metadataPrefix=" + protocolType +"&set="+ journal.getAbbreviation() + "&from="+ startDate +"&until=" + untilDate)
                    .retrieve()
                    .bodyToMono(OAIPMHtype.class)
-                   .timeout(Duration.ofSeconds(100)).block();
+                   .timeout(Duration.ofSeconds(1000)).block();
 
            if (oaipmHtype != null && oaipmHtype.getError().isEmpty()){
                ListRecordsType listRecordsType = oaipmHtype.getListRecords();
@@ -494,6 +517,7 @@ public class ArticleService {
      * Next Page with resumptionToken
      * Protocol AOI DC
      */
+    @Async
     private void resumptionToken(Journal journal, String protocolType, String token) throws CustomException {
         try{
 
@@ -539,6 +563,7 @@ public class ArticleService {
      * Harvest Article With Journal id or ISSN
      * Parsing article with DC Protocol
      */
+    @Async
     private void getDcType(Journal journal, List<RecordType> recordTypes) throws CustomException {
         try{
             for(RecordType recordType: recordTypes){
@@ -580,7 +605,7 @@ public class ArticleService {
                  * Get Article Source
                  * Parse with array string
                  * */
-                String source = oaiElement.getValue().getSource().getValue().getValue();
+                String source = oaiElement.getValue().getSource().get(0).getValue().getValue();
 
                 String pages = null;
 
@@ -588,16 +613,13 @@ public class ArticleService {
 
                 String issue = null;
 
-                if(!source.isEmpty()){
+                if (!source.isEmpty()) {
                     String[] stringList = source.split(";");
 
-                    /**
-                     * Get Data Volume From StringList After Split
-                     * */
-                    if(stringList.length == 3){
-                        pages = stringList[2];
+                    if (stringList.length == 3) {
+                        pages = stringList[2].trim();
 
-                        Pattern pattern = Pattern.compile("Vol\\\\s+(\\\\d+), No\\\\s+(\\\\d+)");
+                        Pattern pattern = Pattern.compile("Vol\\s*(\\d+),\\s*No\\s*(\\d+)");
                         Matcher matcher = pattern.matcher(stringList[1]);
 
                         if (matcher.find()) {
@@ -606,6 +628,7 @@ public class ArticleService {
                         }
                     }
                 }
+
 
                 String publishDate = oaiElement.getValue().getDate().getValue().getValue();
 
@@ -651,7 +674,7 @@ public class ArticleService {
                 String articlePdf = null;
 
                 if(oaiElement.getValue().getRelation() != null){
-                    articlePdf = oaiElement.getValue().getRelation().getValue().getValue();
+                    articlePdf = oaiElement.getValue().getRelation().get(0).getValue().getValue().replaceAll("/view/", "/download/");
                 }
 
                 String keyword = null;
@@ -721,7 +744,7 @@ public class ArticleService {
                     }
 
                     ArticleRequest articleBuild = ArticleRequest.builder()
-                            .journalId(journal.getId())
+                            .journalAbbreviation(journal.getAbbreviation())
                             .ojsId(ojsId)
                             .lastModifier(lastModifier)
                             .title(title)
@@ -763,6 +786,7 @@ public class ArticleService {
      * Harvest Article With Journal id or ISSN
      * Parsing article with Marc Protocol
      */
+    @Async
     private void getMarcType(Journal journal,  List<RecordType> recordTypes) throws CustomException {
         try{
             for(RecordType recordType: recordTypes){
@@ -964,7 +988,7 @@ public class ArticleService {
                 }
 
                 ArticleRequest articleBuild = ArticleRequest.builder()
-                        .journalId(journal.getId())
+                        .journalAbbreviation(journal.getAbbreviation())
                         .ojsId(ojsId)
                         .lastModifier(lastModifier)
                         .title(title)
@@ -1079,7 +1103,7 @@ public class ArticleService {
      * */
     public Iterable<Article> featuredArticles()throws CustomException{
         try {
-            return articleRepository.findTop4ByOrderByCitationByScopusDescCitationByCrossRefDesc();
+            return articleRepository.findTop3ByOrderByCitationByScopusDescCitationByCrossRefDesc();
         }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
@@ -1094,14 +1118,7 @@ public class ArticleService {
 
             statistic.put("articleCount", articleRepository.count());
 
-            Aggregation aggregation = Aggregation.newAggregation(
-                    Aggregation.group("firstName", "lastName").count().as("count"),
-                    Aggregation.group().count().as("authorCount"));
-
-            AggregationResults<Author> results = mongoTemplate.aggregate(aggregation, "authors", Author.class);
-            List<Author> resultList = results.getMappedResults();
-
-            statistic.put("authorCount", (long) resultList.size());
+            statistic.put("authorCount", authorRepository.count());
 
             return statistic;
         }catch (Exception e){
@@ -1111,17 +1128,17 @@ public class ArticleService {
 
     /**
      * Update Set Counter
-     * */
-    public Article setCounterUpdate(SetConterEvent setConterEvent) throws CustomException {
+     */
+    public void setCounterUpdate(SetCounterEvent setCounterEvent) throws CustomException {
         try{
-            Article article = this.getArticle(setConterEvent.getArticleId());
+            Article article = this.getArticle(setCounterEvent.getDoi());
 
-            if(setConterEvent.getStatus().equals(Status.Download)){
-                article.setDownloadCount(setConterEvent.getCount());
+            if(setCounterEvent.getStatus().equals(Status.Download)){
+                article.setDownloadCount(setCounterEvent.getCount());
             }
 
-            if(setConterEvent.getStatus().equals(Status.View)){
-                article.setDownloadCount(setConterEvent.getCount());
+            if(setCounterEvent.getStatus().equals(Status.View)){
+                article.setDownloadCount(setCounterEvent.getCount());
             }
 
 
@@ -1131,72 +1148,161 @@ public class ArticleService {
              * Build Article For Kafka template
              * */
 
-            JournalEvent journalEvent = JournalEvent.builder()
-                    .id(save.getJournal().getId())
-                    .name(save.getJournal().getName())
-                    .issn(save.getJournal().getIssn())
-                    .e_issn(save.getJournal().getE_issn())
-                    .publisher(save.getJournal().getPublisher())
-                    .abbreviation(save.getJournal().getAbbreviation())
-                    .journalSite(save.getJournal().getJournalSite())
-                    .scopusIndex(save.getJournal().isScopusIndex())
-                    .build();
 
-
-            List<KeywordEvent> keywordEvents = new ArrayList<>();
-
-            if(save.getKeywords().size() > 0){
-                for(Keyword keyword: save.getKeywords()){
-                    KeywordEvent keywordEvent = KeywordEvent.builder()
-                            .name(keyword.getName()).build();
-
-                    keywordEvents.add(keywordEvent);
-                }
-            }
-
-
-            HashSet<AuthorEvent> authorEvents = new HashSet<>();
-            if(save.getAuthors().size() > 0){
-                for(Author author: save.getAuthors()){
-                    AuthorEvent authorEvent = AuthorEvent.builder()
-                            .id(author.getId())
-                            .firstName(author.getFirstName())
-                            .lastName(author.getLastName())
-                            .email(author.getEmail())
-                            .affiliation(author.getAffiliation())
-                            .orcid(author.getOrcid())
-                            .build();
-
-                    authorEvents.add(authorEvent);
-                }
-            }
-
-            kafkaTemplate.send("article", ArticleEvent.builder()
-                    .id(save.getId())
-                    .journal(journalEvent)
-                    .ojsId(save.getOjsId())
-                    .title(save.getTitle())
-                    .pages(save.getPages())
-                    .publishYear(save.getPublishYear())
-                    .lastModifier(save.getLastModifier())
-                    .publishDate(save.getPublishDate())
-                    .doi(save.getDoi())
-                    .volume(save.getVolume())
-                    .issue(save.getIssue())
-                    .publishStatus(save.getPublishStatus())
-                    .abstractText(save.getAbstractText())
-                    .articlePdf(save.getArticlePdf())
-                    .keywords(keywordEvents)
-                    .authors(authorEvents)
+            kafkaUpdate.send("setUpdate", UpdateCounter.builder()
+                    .articleId(save.getId())
                     .citationByScopus(save.getCitationByScopus())
                     .citationByCrossRef(save.getCitationByCrossRef())
-                    .figures(save.getFigures())
                     .viewsCount(save.getViewsCount())
                     .downloadCount(save.getDownloadCount())
                     .build());
 
-            return save;
         }catch (Exception e) {
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     *
+     * Citation BibText
+     */
+    public String citationBibText(String id) throws CustomException{
+        try{
+            Optional<Article> article = articleRepository.findById(id);
+
+            if (article.isEmpty()) {
+                throw new CustomException("Article with " + id +" not found", HttpStatus.NOT_FOUND);
+            }
+
+            BibTeXDatabase database = new BibTeXDatabase();
+            BibTeXEntry entry = new BibTeXEntry(BibTeXEntry.TYPE_ARTICLE,
+                    new Key(article.get().getAuthors().iterator().next().getFirstName() + "@"
+                            + article.get().getPublishYear()));
+            entry.addField(BibTeXEntry.KEY_TITLE, new StringValue(article.get().getTitle(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_JOURNAL,
+                    new StringValue(article.get().getJournal().getName(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_YEAR,
+                    new StringValue(article.get().getPublishYear(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_VOLUME, new StringValue(article.get().getVolume(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_DOI, new StringValue(article.get().getDoi(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_PAGES, new StringValue(article.get().getPages(), StringValue.Style.BRACED));
+            entry.addField(BibTeXEntry.KEY_NUMBER, new StringValue(article.get().getIssue(), StringValue.Style.BRACED));
+
+            StringBuilder keyAuthorBuilder = new StringBuilder();
+            for (int i = 0; i < article.get().getAuthors().size(); i++) {
+                Author author = article.get().getAuthors().iterator().next();
+                keyAuthorBuilder.append(author.getFirstName()).append(" ").append(author.getLastName());
+                if (i < article.get().getAuthors().size() - 1) {
+                    keyAuthorBuilder.append(" and ");
+                }
+            }
+
+            entry.addField(BibTeXEntry.KEY_AUTHOR,
+                    new StringValue(keyAuthorBuilder.toString(), StringValue.Style.BRACED));
+            database.addObject(entry);
+
+            BibTeXFormatter formatter = new BibTeXFormatter();
+            StringWriter stringWriter = new StringWriter();
+            formatter.format(database, stringWriter);
+            return stringWriter.toString();
+
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+    /**
+     *
+     * GetFull Text Article
+     */
+    @Async
+    public void fullText(String id) throws CustomException{
+        try{
+            Article article = this.getArticle(id);
+
+        if(article.getArticlePdf() != null && !article.getArticlePdf().contains("downloadSuppFile") && !article.getArticlePdf().contains("info") && article.getFullText() == null){
+            URL url = new URL(article.getArticlePdf());
+
+            InputStream inputStream = url.openStream();
+
+            PDDocument document = Loader.loadPDF(inputStream);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String text = stripper.getText(document);
+            document.close();
+
+            String[] lines = text.split("\n");
+            StringBuilder paragraph = new StringBuilder();
+            String startElement = "INTRODUCTION";
+            String endElement = "BIOGRAPHIES OF AUTHORS";
+            boolean foundStart = false;
+            boolean foundEnd = false;
+
+            for (String line : lines) {
+                if (line.contains(startElement)) {
+                    foundStart = true;
+                } else if (line.contains(endElement)) {
+                    foundEnd = true;
+                    break;
+                } else if (foundStart) {
+                    paragraph.append(line).append("\n");
+                }
+            }
+            article.setFullText(paragraph.toString());
+
+            articleRepository.save(article);
+        }
+        }catch (Exception e){
+            throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
+        }
+    }
+
+
+    public  List<String> multipleCitationBibText(int count) throws CustomException{
+        try{
+            Pageable pageable = PageRequest.of(0, count);
+
+            Iterable<Article> articles = articleRepository.findAll();
+
+            List<String> export = new ArrayList<>();
+
+            for(Article article: articles){
+                BibTeXDatabase database = new BibTeXDatabase();
+                BibTeXEntry entry = new BibTeXEntry(BibTeXEntry.TYPE_ARTICLE,
+                        new Key(article.getAuthors().iterator().next().getFirstName() + "@"
+                                + article.getPublishYear()));
+                entry.addField(BibTeXEntry.KEY_TITLE, new StringValue(article.getTitle(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_JOURNAL,
+                        new StringValue(article.getJournal().getName(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_YEAR,
+                        new StringValue(article.getPublishYear(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_VOLUME, new StringValue(article.getVolume(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_DOI, new StringValue(article.getDoi(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_PAGES, new StringValue(article.getPages(), StringValue.Style.BRACED));
+                entry.addField(BibTeXEntry.KEY_NUMBER, new StringValue(article.getIssue(), StringValue.Style.BRACED));
+
+                StringBuilder keyAuthorBuilder = new StringBuilder();
+                for (int i = 0; i < article.getAuthors().size(); i++) {
+                    Author author = article.getAuthors().iterator().next();
+                    keyAuthorBuilder.append(author.getFirstName()).append(" ").append(author.getLastName());
+                    if (i < article.getAuthors().size() - 1) {
+                        keyAuthorBuilder.append(" and ");
+                    }
+                }
+
+                entry.addField(BibTeXEntry.KEY_AUTHOR,
+                        new StringValue(keyAuthorBuilder.toString(), StringValue.Style.BRACED));
+                database.addObject(entry);
+
+                BibTeXFormatter formatter = new BibTeXFormatter();
+                StringWriter stringWriter = new StringWriter();
+                formatter.format(database, stringWriter);
+                export.add(stringWriter.toString());
+            }
+
+            return export;
+
+
+        }catch (Exception e){
             throw new CustomException(e.getMessage(), HttpStatus.BAD_GATEWAY);
         }
     }
